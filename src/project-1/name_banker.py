@@ -1,7 +1,27 @@
 import numpy as np 
-
+from sklearn.ensemble import RandomForestClassifier
 
 class NameBanker:
+
+	#Fit a model for calculating the probability of credit-worthiness
+	def fit(self, x, y):
+		#TODO: Preprocessing
+		self.classifier = RandomForestClassifier(
+			n_estimators=100,
+			random_state=0,
+			max_depth=self.best_max_depth,
+			max_features=self.best_max_features,
+			class_weight="balanced"
+			)
+		self.classifier.fit(x,y)
+
+	#Return the probability that a person will return the loan
+	def predict_proba(self, x):
+		#TODO: some reshaping or preprocessing
+		prediction = self.classifier.predict_proba(x)[0][1]
+		return prediction
+
+
 
 	def set_interest_rate(self, rate):
 
@@ -31,6 +51,9 @@ class NameBanker:
 				utility += m * ((1 + self.rate) ** n - 1) * Pi - (1 - Pi) * m
 
 		return utility
+
+	
+
 
 
 if __name__ == "__main__":
