@@ -26,6 +26,7 @@ class RandomBanker:
     # The return if the loan is not paid off is -amount_of_loan.
     def expected_utility(self, x, action):
         print("Expected utility: Not implemented")
+        
     # Return the best action. This is normally the one that maximises expected utility.
     # However, you are allowed to deviate from this if you can justify the reason.
     def get_best_action(self, x):
