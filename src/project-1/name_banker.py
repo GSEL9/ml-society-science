@@ -24,7 +24,6 @@ class NameBanker:
     # predicting credit worthiness as input to your policy
     def predict_proba(self, x: pd.Series) -> float:
         """Returns the probability that a person will return the loan."""
-        print("Calling preict_proba, dtypes: ", type(x))
         if "classifier" not in self.__dict__:
             raise ValueError("This NameBanker instance is not fitted yet. Call 'fit' with appropriate arguments before using this method.")
 
