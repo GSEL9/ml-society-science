@@ -11,25 +11,28 @@ class NameBanker:
         self.classifier = RandomForestClassifier(
             n_estimators=100,
             random_state=0,
-            max_depth=self.best_max_depth,
-            max_features=self.best_max_features,
+            # TODO: find best parameters
+            # max_depth=self.best_max_depth,
+            # max_features=self.best_max_features,
             class_weight="balanced"
         )
-        self.classifier.fit(x,y)
+        self.classifier.fit(X,y)
 
-    def set_interest_rate(self, rate: int) -> None:
+    def set_interest_rate(self, rate: float) -> None:
         self.rate = rate
 
     # predicting credit worthiness as input to your policy
     def predict_proba(self, x: pd.Series) -> float:
         """Returns the probability that a person will return the loan."""
-
+        print("Calling preict_proba, dtypes: ", type(x))
         if "classifier" not in self.__dict__:
             raise ValueError("This NameBanker instance is not fitted yet. Call 'fit' with appropriate arguments before using this method.")
 
-        return self.classifier.predict_proba(x)[0][1]
+        x_arr = x.to_numpy()
+        pred = self.classifier.predict_proba([x_arr])
+        return pred[0][1]
 
-    def expected_utility(self, x: pd.DataFrame, action: int) -> float:
+    def expected_utility(self, x: pd.Series, action: int) -> float:
         """Calculate the expected utility of a particular action for a given individual.
 
         Args:
@@ -40,7 +43,6 @@ class NameBanker:
                 real number between 0 and 1 denoting probability of returning loan
                 given the features
         """
-
         if action:
             # Probability of being credit worthy.
             pi = self.predict_proba(x)
@@ -58,6 +60,7 @@ class NameBanker:
         Returns:
             action: 0 or 1 regarding wether or not to give loan
         """
+
         # TODO? Conseder reasons to not maximize utility
         return int(self.expected_utility(x, 1) > 0)
 
