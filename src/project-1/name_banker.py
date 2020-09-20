@@ -15,22 +15,19 @@ class NameBanker:
 
 	def expected_utility(self, x, action):
 
-		# Expected utility given some action.
-		utility = 0
-		for i in range(len(x)):
+		# NOTE: No update unless granting loan.
+		if action == 1:
 
-			# No update unless granting loan.
-			if action == 1:
+			P_credit_worthy = self.get_proba()
+			P_not_credit_worthy = 1 - P_credit_worthy
 
-				# Probability of being credit worthy.
-				Pi = self.get_proba()
+			U_credit_worthy = x["amount"] * ((1 + self.rate) ** x["duration"] - 1)
+			U_not_credit_worthy = -1.0 * x["amount"]
 
-				n = x["duration"].iloc[i]
-				m = x["amount"].iloc[i]
+			# Summation over all rewards, r.
+			return P_credit_worthy * U_credit_worthy + P_not_credit_worthy * U_not_credit_worthy
 
-				utility += m * ((1 + self.rate) ** n - 1) * Pi - (1 - Pi) * m
-
-		return utility
+		return 0
 
 
 if __name__ == "__main__":
