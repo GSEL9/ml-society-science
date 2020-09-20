@@ -1,49 +1,89 @@
-import numpy as np 
+import numpy as np
+import pandas as pd
+
+from sklearn.ensemble import RandomForestClassifier
 
 
 class NameBanker:
+    """DOCS
+    """
 
-	def set_interest_rate(self, rate):
+    # actions = (0, 1)
+    # classes = (1, 2)
 
-		self.rate = rate
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> None:
+        """Docstring for fit"""
 
-	# TODO:
-	# TEMP: Dummy config 
-	def get_proba(self):
+        self.classifier = RandomForestClassifier(
+            n_estimators=100,
+            random_state=0,
+            # TODO: find best parameters
+            # max_depth=self.best_max_depth,
+            # max_features=self.best_max_features,
+            class_weight="balanced"
+        )
+        self.classifier.fit(X,y)
 
-		return 0.4
+    def set_interest_rate(self, rate: float) -> None:
 
-	def expected_utility(self, x, action):
+        self.rate = rate
 
-		# NOTE: No update unless granting loan.
-		if action == 1:
+    def predict_proba(self, x: pd.Series) -> float:
+        """Returns the probability that a person will return the loan."""
 
-			P_credit_worthy = self.get_proba()
-			P_not_credit_worthy = 1 - P_credit_worthy
+        if "classifier" not in self.__dict__:
+            raise ValueError("This NameBanker instance is not fitted yet. Call 'fit' "
+                             "with appropriate arguments before using this method.")
 
-			U_credit_worthy = x["amount"] * ((1 + self.rate) ** x["duration"] - 1)
-			U_not_credit_worthy = -1.0 * x["amount"]
+        return self.classifier.predict_proba([x.to_numpy()])[0][1]
 
-			# Summation over all rewards, r.
-			return P_credit_worthy * U_credit_worthy + P_not_credit_worthy * U_not_credit_worthy
+    def expected_utility(self, x: pd.Series, action: int) -> float:
+        """Calculate the expected utility of a particular action for a given individual.
 
-		return 0
+        Args:
+            x: Features describing a selected individual
+            action: whether or not to give loan.
+
+        Returns:
+            probability:
+                real number between 0 and 1 denoting probability of returning loan
+                given the features
+        """
+
+        if action:
+
+            # Probability of being credit worthy.
+            pi = self.predict_proba(x)
+
+            return x["amount"] * ((1 + self.rate) ** x["duration"] - 1) * pi - x["amount"] * (1 - pi)
+
+        return 0.0
+
+    def get_best_action(self, x: pd.Series) -> int:
+        """Returns the action maximising expected utility.
+
+        Args:
+            x: Feature "vector" describing a selected individual
+        Returns:
+            action: 0 or 1 regarding wether or not to give loan
+        """
+
+        # TODO? Conseder reasons to not maximize utility
+        return int(self.expected_utility(x, 1) > 0)
 
 
 if __name__ == "__main__":
 
-	import pandas
+    target = ['repaid']
+    features = ['checking account balance', 'duration', 'credit history',
+                'purpose', 'amount', 'savings', 'employment', 'installment',
+                'marital status', 'other debtors', 'residence time',
+                'property', 'age', 'other installments', 'housing', 'credits',
+                'job', 'persons', 'phone', 'foreign']
 
-	target = ['repaid']
-	features = ['checking account balance', 'duration', 'credit history',
-	            'purpose', 'amount', 'savings', 'employment', 'installment',
-	            'marital status', 'other debtors', 'residence time',
-	            'property', 'age', 'other installments', 'housing', 'credits',
-	            'job', 'persons', 'phone', 'foreign']
+    df = pd.read_csv('../../data/credit/german.data', sep=' ', names=features + target)
 
-	df = pandas.read_csv('../../data/credit/german.data', sep=' ', names=features + target)
-
-	decision_maker = NameBanker()
-	decision_maker.set_interest_rate(0.05)
-	utility = decision_maker.expected_utility(df, 1)
-	print(utility)
+    decision_maker = NameBanker()
+    decision_maker.set_interest_rate(0.05)
+    utility = decision_maker.expected_utility(df, 1)
+    print(utility)
