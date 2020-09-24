@@ -31,7 +31,7 @@ class NameBanker:
     def predict_proba(self, x: pd.Series) -> float:
         """Returns the probability that a person will return the loan."""
 
-        if "classifier" not in self.__dict__:
+        if not hasattr(self, "classifier"):
             raise ValueError("This NameBanker instance is not fitted yet. Call 'fit' "
                              "with appropriate arguments before using this method.")
 
@@ -67,8 +67,6 @@ class NameBanker:
         Returns:
             action: 0 or 1 regarding wether or not to give loan
         """
-
-        # TODO? Conseder reasons to not maximize utility
         return int(self.expected_utility(x, 1) > 0)
 
 
