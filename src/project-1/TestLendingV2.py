@@ -1,7 +1,7 @@
 import pandas
 import matplotlib.pyplot as plt
 from random_banker import RandomBanker
-from name_banker import NameBanker
+from group4_banker import Group4Banker
 from sklearn.model_selection import train_test_split
 from argparse import ArgumentParser
 import numpy as np
@@ -60,7 +60,8 @@ def parse_args():
     ap.add_argument("--n-tests", type=int, default=10)
     ap.add_argument("-r", "--interest-rate", type=float, default=0.017)
     ap.add_argument("-s", "--seed", type=int, default=42)
-
+    ap.add_argument("--optimize", action="store_true")
+    
     return ap.parse_args()
 
 def main():
@@ -76,7 +77,7 @@ def main():
 
     print(f"r={interest_rate}, n_tests={n_tests}, seed={args.seed}")
 
-    for decision_maker in RandomBanker(), NameBanker():
+    for decision_maker in RandomBanker(), Group4Banker(optimize=args.optimize, random_state=args.seed):
         decision_maker.set_interest_rate(interest_rate)
         utility = 0
         investment_return = 0
