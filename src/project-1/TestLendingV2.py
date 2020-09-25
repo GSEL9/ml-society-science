@@ -2,7 +2,6 @@ import pandas
 import matplotlib.pyplot as plt
 from random_banker import RandomBanker
 from name_banker import NameBanker
-from markus_banker import MarkusBanker
 from sklearn.model_selection import train_test_split
 from argparse import ArgumentParser
 import numpy as np
@@ -61,7 +60,7 @@ def parse_args():
     ap.add_argument("--n-tests", type=int, default=10)
     ap.add_argument("-r", "--interest-rate", type=float, default=0.017)
     ap.add_argument("-s", "--seed", type=int, default=42)
-    
+
     return ap.parse_args()
 
 def main():
@@ -74,14 +73,14 @@ def main():
     interest_rate = args.interest_rate
     # Do a number of preliminary tests by splitting the data in parts
     n_tests = args.n_tests
-    
+
     print(f"r={interest_rate}, n_tests={n_tests}, seed={args.seed}")
 
     for decision_maker in RandomBanker(), NameBanker():
         decision_maker.set_interest_rate(interest_rate)
         utility = 0
         investment_return = 0
-        
+
         print("\nTesting on class:", type(decision_maker).__name__, "...")
         for i in tqdm(range(n_tests)):
             X_train, X_test, y_train, y_test = train_test_split(X[encoded_features], X[target], test_size=0.2)
@@ -90,7 +89,7 @@ def main():
             Ui, Ri = test_decision_maker(X_test, y_test, interest_rate, decision_maker)
             utility += Ui
             investment_return += Ri
-            
+
         print("Results:")
         print("\tAverage utility:", utility / n_tests)
         print("\tAverage return on investment:", investment_return / n_tests)
