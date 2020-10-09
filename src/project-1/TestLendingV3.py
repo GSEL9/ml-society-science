@@ -26,12 +26,12 @@ def setup_data(data_path):
     X = pandas.get_dummies(df, columns=quantitative_features, drop_first=True)
     encoded_features = list(filter(lambda x: x != target, X.columns))
 
-    randomized_features = randomize_data(encoded_features, numerical_features, quantitative_features, 0.5, 1)    
+    X_random = randomize_data(X, numerical_features, list(filter(lambda x: x not in numerical_features, encoded_features)), 0.5, 1)
 
-    return X, encoded_features, randomized_features, target
+    return X, X_random, encoded_features, target
 
 def randomize_data(df, numerical_features, categorical_features, probability, laplace_delta):
-    df_copy = df.df.copy()
+    df_copy = df.copy()
 
     for column_name in categorical_features:
 
@@ -48,7 +48,7 @@ def randomize_data(df, numerical_features, categorical_features, probability, la
         temp_col = df_copy[column_name]
         noise = np.random.laplace(0, laplace_delta, size = temp_col.size)
         noise *= temp_col.std()
-        df_copy[column_name] = temp_col + noise 
+        df_copy[column_name] = temp_col + noise
 
     return df_copy
 
@@ -85,14 +85,14 @@ def parse_args():
     ap.add_argument("-r", "--interest-rate", type=float, default=0.017)
     ap.add_argument("-s", "--seed", type=int, default=42)
     ap.add_argument("--optimize", action="store_true")
-    
+
     return ap.parse_args()
 
 def main():
     args = parse_args()
 
     np.random.seed(args.seed)
-    X, encoded_features, randomized_features, target = setup_data(args.data_path)
+    X, X_random, encoded_features, target = setup_data(args.data_path)
 
     # Setup model
     interest_rate = args.interest_rate
@@ -104,14 +104,14 @@ def main():
 
     decision_maker = Group4Banker(optimize=args.optimize, random_state=args.seed)
 
-    for features in encoded_features, randomized_features :
+    for dataset, name in (X, "default"), (X_random, "randomized"):
+        print(f"Testing on {name} dataset")
         decision_maker.set_interest_rate(interest_rate)
         utility = 0
         investment_return = 0
 
-        print("\nTesting on dataset:", type(features).__name__, "...")
         for i in tqdm(range(n_tests)):
-            X_train, X_test, y_train, y_test = train_test_split(X[randomized_features], X[target], test_size=0.2)
+            X_train, X_test, y_train, y_test = train_test_split(dataset[encoded_features], dataset[target], test_size=0.2)
             decision_maker.set_interest_rate(interest_rate)
             decision_maker.fit(X_train, y_train)
             Ui, Ri = test_decision_maker(X_test, y_test, interest_rate, decision_maker)
