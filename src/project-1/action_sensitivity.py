@@ -53,7 +53,7 @@ def oob_sampling(model, X, y, n_samples, size_sample, seed):
     return Y_true, Y_pred
 
 
-def posterior_hypothesis(X):
+def posterior_hypothesis(X, p):
     
     n_samples, n_trails = np.shape(X)
     
@@ -74,7 +74,7 @@ def posterior_hypothesis(X):
             beta = beta + 1 - x
             
             # Prior for the null hypothesis being true.
-            log_p = log_p + np.log(0.5)
+            log_p = log_p + np.log(p)
             log_p_marginal = log_p_marginal + np.log(p_x)
 
             posterior[j, i] = np.exp(log_p - np.log(np.exp(log_p_marginal) + np.exp(log_p)))
@@ -92,13 +92,13 @@ def plot_posteriors(Y_true, Y_pred):
     p_not_grant_high = p_not_grant + np.sqrt(np.log(2) * delta / (2 * Y_true.shape[0]))
 
     # Posterior hypothesis of H0.
-    post_grant_true = posterior_hypothesis(Y_true)
-    post_grant_pred = posterior_hypothesis(Y_pred)
-    post_grant_pred_low = posterior_hypothesis(Y_pred)
-    post_grant_pred_high = posterior_hypothesis(Y_pred)
+    post_grant_true = posterior_hypothesis(Y_true, p=p_not_grant)
+    post_grant_pred = posterior_hypothesis(Y_pred, p=p_not_grant)
+    post_grant_pred_low = posterior_hypothesis(Y_pred, p=p_not_grant_low)
+    post_grant_pred_high = posterior_hypothesis(Y_pred, p=p_not_grant_high)
 
     fig, ax = plt.subplots(1, 1, figsize=set_fig_size(500, fraction=1))
-    ax.set_title(r"Posterior probability of rejecting $H_0$")
+    ax.set_title(r"Posterior probability of accepting $H_0$")
     ax.plot(np.mean(post_grant_true, axis=1), label="Test data", c="darkorange", alpha=0.7)
     ax.plot(np.mean(post_grant_pred, axis=1), label="Model predictions", alpha=0.7)
     ax.fill_between(np.arange(Y_true.shape[0]), 
@@ -111,29 +111,29 @@ def plot_posteriors(Y_true, Y_pred):
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     plt.tight_layout()
-    fig.savefig("reject_null_hypo.pdf")
-   
+    fig.savefig("posterior_null_hypo.pdf")
+    
     bayes_reject_grant_true = np.mean(post_grant_true < p_not_grant, axis=1)
     bayes_reject_grant_pred = np.mean(post_grant_pred < p_not_grant, axis=1)
     bayes_reject_grant_pred_low = np.mean(post_grant_pred_low < p_not_grant, axis=1)
     bayes_reject_grant_pred_high = np.mean(post_grant_pred_high < p_not_grant, axis=1)
 
     fig, ax = plt.subplots(1, 1, figsize=set_fig_size(500, fraction=1))
-    ax.set_title(r"Posterior probability of accepting $H_0$")
+    ax.set_title(r"Posterior probability of rejecting $H_0$")
     ax.plot(bayes_reject_grant_true, label="Test data", c="darkorange", alpha=0.7)
     ax.plot(bayes_reject_grant_pred, label="Model predictions", alpha=0.7)
     ax.fill_between(np.arange(Y_true.shape[0]), 
                     bayes_reject_grant_pred_low, 
                     bayes_reject_grant_pred_high, alpha=0.2)
+    ax.legend()
     ax.set_ylabel("Posterior probability")
     ax.set_xlabel("Number of bootstrap samples")
-    ax.legend()
     set_arrowed_spines(fig, ax)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     plt.tight_layout()
-    fig.savefig("posterior_null_hypo.pdf")
-
+    fig.savefig("reject_null_hypo.pdf")
+    
 
 def main():
     
@@ -149,7 +149,7 @@ def main():
     X_test = D_test.loc[:, encoded_features] 
     y_test = D_test.loc[:, target] 
     
-    Y_true, Y_pred = oob_sampling(model, X_test, y_test, 200, 50, 42)
+    Y_true, Y_pred = oob_sampling(model, X_test, y_test, 500, 50, 42)
     
     np.save("Y_true.npy", Y_true)
     np.save("Y_pred.npy", Y_pred)
