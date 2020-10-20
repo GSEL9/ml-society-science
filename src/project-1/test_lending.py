@@ -7,8 +7,10 @@ from group4_banker import Group4Banker
 # Script extension:
 from argparse import ArgumentParser
 from tqdm import tqdm
-from typing import Any, Dict, Iterable, List, Tuple
+from typing import Any, Dict, Iterable, List, Tuple, Union
 
+# For simplicity. Could be replaced with something more generic
+Banker = Union[Group4Banker, RandomBanker]
 
 def setup_data(data_path: str) -> Tuple[pd.DataFrame, Dict[str, Any]]:
     """
@@ -96,7 +98,7 @@ def randomize_data(data: tuple, probability: float, laplace_delta: float) -> pd.
     return X_random
 
 
-def test_decision_maker(X_test: pd.DataFrame, y_test: pd.DataFrame, interest_rate: float, decision_maker: Any):
+def test_decision_maker(X_test: pd.DataFrame, y_test: pd.DataFrame, interest_rate: float, decision_maker: Banker):
     """
     This function tests the utilities and returns of the banker models
     """
@@ -123,7 +125,7 @@ def test_decision_maker(X_test: pd.DataFrame, y_test: pd.DataFrame, interest_rat
     return utility, total_utility/total_amount
 
 
-def measure_bankers(bankers: Iterable[Any],
+def measure_bankers(bankers: List[Banker],
                     data: Tuple[pd.DataFrame, Dict[str, Any]],
                     interest_rate: float,
                     n_tests: int, prints: bool=True) -> Dict[str, Tuple[float, float]]:
