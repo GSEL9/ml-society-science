@@ -9,9 +9,8 @@ class Group4Banker:
     """
     A decision rule for giving loans to individuals.
     Policy: select action which maximises utility
-    
-    
-    
+
+
     Args:
         optimize: whether to optimize the classifier's hyperparameters using 5-fold cv grid search
             default: false
@@ -19,11 +18,11 @@ class Group4Banker:
             default: 1234
     """
 
-    
-    
+
     def __init__(self, optimize: bool=False, random_state: int=1234):
         self.optimize = optimize
         self.random_state = random_state
+
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> None:
         """Fits a model for calculating the probability of credit- worthiness
@@ -32,7 +31,7 @@ class Group4Banker:
             X: Feature set of individuals
             y: Target labels against the individuals
         """
-        
+
         if self.optimize:
             #Finding optimal paramters
             param_grid = [{
@@ -42,22 +41,25 @@ class Group4Banker:
                 'n_estimators' : list(range(25,150,25))
             }]
 
-            grid_search = GridSearchCV(estimator = RandomForestClassifier(), param_grid = param_grid, cv = 5)
+            grid_search = GridSearchCV(estimator=RandomForestClassifier(), param_grid=param_grid, cv=5)
             grid_search.fit(X, y)
             self.classifier = RandomForestClassifier(random_state=self.random_state, **grid_search.best_params_)
+
         else:
             self.classifier = RandomForestClassifier(
                 n_estimators=100,
                 random_state=self.random_state,
                 class_weight="balanced"
             )
-            
+
         # NOTE:
         # classes = (1, 2)
         self.classifier.fit(X,y)
 
+
     def set_interest_rate(self, rate: float) -> None:
         self.rate = rate
+
 
     def predict_proba(self, x: pd.Series) -> float:
         """Returns the probability that a person will return the loan.
@@ -79,6 +81,7 @@ class Group4Banker:
 
         return self.classifier.predict_proba(x_reshaped)[0][0]
 
+
     def expected_utility(self, x: pd.Series, action: int) -> float:
         """Calculate the expected utility of a particular action for a given individual.
 
@@ -93,13 +96,12 @@ class Group4Banker:
         """
 
         if action:
-
             # Probability of being credit worthy.
             pi = self.predict_proba(x)
-
             return x["amount"] * ((1 + self.rate) ** x["duration"] - 1) * pi - x["amount"] * (1 - pi)
 
         return 0.0
+
 
     def get_best_action(self, x: pd.Series) -> int:
         """Returns the action maximising expected utility.
