@@ -7,7 +7,7 @@ from group4_banker import Group4Banker
 # Script extension:
 from argparse import ArgumentParser
 from tqdm import tqdm
-from typing import Any, Dict, Iterable, List, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union
 
 # For simplicity. Could be replaced with something more generic
 Banker = Union[Group4Banker, RandomBanker]
@@ -59,7 +59,8 @@ def setup_data(data_path: str) -> Tuple[pd.DataFrame, Dict[str, Any]]:
     return X, feature_data
 
 
-def randomize_data(data: tuple, probability: float, laplace_delta: float) -> pd.DataFrame:
+def randomize_data(data: Tuple[pd.DataFrame, Dict[str, Any]],
+                   probability: float, laplace_delta: float) -> pd.DataFrame:
     """
     randomizes features in the daset for privacy measures
 
