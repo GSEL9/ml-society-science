@@ -109,18 +109,18 @@ def test_decision_maker(X_test: pd.DataFrame, y_test: pd.DataFrame, interest_rat
     ## Example test function - this is only an unbiased test if the data has not been seen in training
     total_amount = 0
     total_utility = 0
-    # decision_maker.set_interest_rate(interest_rate)
+
     for t in range(n_test_examples):
         action = decision_maker.get_best_action(X_test.iloc[t])
         good_loan = y_test.iloc[t] # assume the labels are correct
         duration = X_test['duration'].iloc[t]
         amount = X_test['amount'].iloc[t]
         # If we don't grant the loan then nothing happens
-        if (action==1):
-            if (good_loan != 1):
+        if action == 1:
+            if good_loan != 1:
                 utility -= amount
             else:
-                utility += amount*(pow(1 + interest_rate, duration) - 1)
+                utility += amount * (pow(1 + interest_rate, duration) - 1)
         total_utility += utility
         total_amount += amount
     return utility, total_utility/total_amount
@@ -207,7 +207,7 @@ def main():
     args = parse_args()
 
     np.random.seed(args.seed)
-    print("Running with random seeed: ", args.seed)
+    print("Running with random seed: ", args.seed)
 
     interest_rate = args.interest_rate
     n_tests = args.n_tests
