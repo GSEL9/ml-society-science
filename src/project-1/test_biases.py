@@ -3,7 +3,7 @@ import pandas as pd
 from group4_banker import Group4Banker
 from argparse import ArgumentParser
 import matplotlib.pyplot as plt
-from TestLendingV2 import setup_data
+from test_lending import setup_data
 
 def parse_args():
     parser = ArgumentParser()
@@ -14,20 +14,24 @@ def parse_args():
     return parser.parse_args()
 
 def get_trained_model(interest_rate):
-    X_train, encoded_features, target = setup_data("../../data/credit/D_train.csv")
+    X_train, feature_data = setup_data("../../data/credit/D_train.csv")
     decision_maker = Group4Banker()
     decision_maker.set_interest_rate(interest_rate)
-    decision_maker.fit(X_train[encoded_features], X_train[target])
+    decision_maker.fit(X_train[feature_data["encoded_features"]],
+                       X_train[feature_data["target"]])
     return decision_maker
 
 def get_encoded_features():
-    return setup_data("../../data/credit/D_train.csv")[1]
+    return setup_data("../../data/credit/D_train.csv")[1]["encoded_features"]
 
 def main(args):
     np.random.seed(args.seed)
 
-    X_train, encoded_features, target = setup_data("../../data/credit/D_train.csv")
+    X_train, feature_data = setup_data("../../data/credit/D_train.csv")
     X_val, *_ = setup_data("../../data/credit/D_valid.csv")
+
+    encoded_features = feature_data["encoded_features"]
+    target = feature_data["target"]
 
     single_male = "marital status_3"
     single_female = "marital status_5"
