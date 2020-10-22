@@ -12,8 +12,15 @@ try:
 except ImportError:
     print("optinal package seaborn not found: proceeding with default theme")
 
-single_male = "marital status_3"
-single_female = "marital status_5"
+feature_description = {
+    "marital status_1":"divorced/separated male",
+    "marital status_2":"divorced/separated/married female",
+    "marital status_3":"single male",
+    "marital status_4":"married/widowed male",
+    "marital status_5":"single female"
+}
+
+description_feature = {v:k for k, v in feature_description.items()}
 
 def parse_args():
     parser = ArgumentParser()
@@ -37,6 +44,10 @@ def get_encoded_features():
 
 def measure_probability_difference(args):
     np.random.seed(args.seed)
+
+    single_male = description_feature["single male"]
+    single_female = description_feature["single female"]
+
     X_train, feature_data = setup_data("../../data/credit/D_train.csv")
     X_val, *_ = setup_data("../../data/credit/D_valid.csv")
 
@@ -76,8 +87,8 @@ def measure_probability_difference(args):
         row[single_female] = 0
 
         print("Estimated probability for single male:", proba_on_m,
-            "\nEstimated probabiltiy for single female:", proba_on_f,
-            "\nAbsolute difference", abs(proba_on_m - proba_on_f), "\n")
+              "\nEstimated probabiltiy for single female:", proba_on_f,
+              "\nAbsolute difference", abs(proba_on_m - proba_on_f), "\n")
 
 
 def create_histogram(args):
