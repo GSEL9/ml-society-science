@@ -11,7 +11,8 @@ class Group4Banker:
     Policy: select action which maximises utility
 
 
-    Args:
+    Arguments:
+    ----------
         optimize: whether to optimize the classifier's hyperparameters using 5-fold cv grid search
             default: false
         random_state: seed for the pseduo random number generator (of the classifier)
@@ -27,7 +28,8 @@ class Group4Banker:
     def fit(self, X: pd.DataFrame, y: pd.Series) -> None:
         """Fits a model for calculating the probability of credit- worthiness
 
-        Args:
+        Arguments:
+        ----------
             X: Feature set of individuals
             y: Target labels against the individuals
         """
@@ -64,10 +66,12 @@ class Group4Banker:
     def predict_proba(self, x: pd.Series) -> float:
         """Returns the probability that a person will return the loan.
 
-        Args:
+        Arguments:
+        ----------
             x: Features describing a selected individual
 
         Returns:
+        --------
             probability:
                 real number between 0 and 1 denoting probability of the individual to be credit-worthy
 
@@ -85,11 +89,13 @@ class Group4Banker:
     def expected_utility(self, x: pd.Series, action: int) -> float:
         """Calculate the expected utility of a particular action for a given individual.
 
-        Args:
+        Arguments:
+        ----------
             x: Features describing a selected individual
             action: whether or not to give loan.
 
         Returns:
+        --------
             expected_utility:
                 the result of our given utility formula m[(1+r)^n] multiplied by probability of loan return
         """
@@ -105,9 +111,11 @@ class Group4Banker:
     def get_best_action(self, x: pd.Series) -> int:
         """Returns the action maximising expected utility.
 
-        Args:
+        Arguemnts:
+        ----------
             x: Feature "vector" describing a selected individual
         Returns:
+        --------
             action: 0 or 1 regarding wether or not to give loan
         """
         return int(self.expected_utility(x, 1) > 0)
