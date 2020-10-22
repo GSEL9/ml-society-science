@@ -90,9 +90,8 @@ class Group4Banker:
             action: whether or not to give loan.
 
         Returns:
-            probability:
-                real number between 0 and 1 denoting probability of returning loan
-                given the features
+            expected_utility:
+                the result of our given utility formula m[(1+r)^n] multiplied by probability of loan return
         """
 
         if action:
