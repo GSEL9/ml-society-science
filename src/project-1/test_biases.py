@@ -83,6 +83,7 @@ def get_gender_outcome_action_from_german_data():
 
     return Z, Y, A
 
+
 def marginal_probability(data, alpha, beta):
         total_probability = 1
         log_probability = 0
