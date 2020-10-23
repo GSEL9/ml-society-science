@@ -143,7 +143,7 @@ def measure_bankers(bankers: List[Banker],
 
     Returns:
     --------
-        results: utilities and investment returns
+        results: average utilities and investment returns
     """
     X, feature_data = data
     encoded_features = feature_data["encoded_features"]
@@ -182,7 +182,7 @@ def measure_bankers(bankers: List[Banker],
         else:
             duplicate[banker_name] = 1
 
-        results[banker_name] = (utility, investment_return)
+        results[banker_name] = (utility/n_tests, investment_return/n_tests)
 
 
     return results
@@ -204,6 +204,7 @@ def parse_args():
 
 
 def main():
+
     args = parse_args()
 
     np.random.seed(args.seed)
@@ -220,6 +221,9 @@ def main():
 
     if args.random_banker: decision_makers.insert(0, RandomBanker())
     if args.randomized:
+        # Suppress warning in randomize data
+        pd.options.mode.chained_assignment = None
+
         probability, laplace_delta = args.randomized
         print(f"probability: {probability}, laplace delta: {laplace_delta}")
         X_random = randomize_data(data, probability, laplace_delta)
@@ -228,8 +232,10 @@ def main():
     results = measure_bankers(decision_makers, data, interest_rate, n_tests=args.n_tests)
 
     if args.randomized:
-        results = measure_bankers(decision_makers, data_random, interest_rate, n_tests=args.n_tests)
+        results_random = measure_bankers(decision_makers, data_random, interest_rate, n_tests=args.n_tests)
 
+        print("\nPrivacy cost (avg_return_normal - avg_return_privacy)")
+        print(results["Group4Banker"][1] - results_random["Group4Banker"][1])
 
 if __name__ == "__main__":
     main()

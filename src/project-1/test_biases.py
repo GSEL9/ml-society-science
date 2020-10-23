@@ -30,6 +30,13 @@ def parse_args():
 
     return parser.parse_args()
 
+
+def get_returns_on_feature(feature, data, target, feature_value=1):
+    data = data[data[feature] == 1]
+    positives, negatives = data[target] == 1, data[target] == 2
+    return positives.sum(), negatives.sum()
+
+
 def get_trained_model(interest_rate):
     X_train, feature_data = setup_data("../../data/credit/D_train.csv")
     decision_maker = Group4Banker()
@@ -64,11 +71,12 @@ def measure_probability_difference(args):
     df_single_female = (X_train[single_female] == 1)
     single_female_and_return = (X_train[single_female] == 1) & (X_train[target] == 1)
 
-    print("Proportion of returns for single males in the train set:\n", single_male_and_return.sum()/df_single_male.sum())
-    print("Proportion of returns for single females in the train set:\n", single_female_and_return.sum()/df_single_female.sum(), "\n")
-
-
     samples = X_val.sample(n=args.n_tests)
+    n_tests = args.n_tests
+
+    avg_diff = 0
+    max_diff_male = 0
+    max_diff_female = 0
 
     for i, row in samples.iterrows():
         for i in range(1, 6):
@@ -86,10 +94,19 @@ def measure_probability_difference(args):
         utility_f = decision_maker.expected_utility(row[encoded_features], 1)
         row[single_female] = 0
 
-        print("Estimated probability for single male:", proba_on_m,
-              "\nEstimated probabiltiy for single female:", proba_on_f,
-              "\nAbsolute difference", abs(proba_on_m - proba_on_f), "\n")
+        diff = proba_on_m - proba_on_f
+        if diff > max_diff_male: max_diff_male = diff
+        if diff < max_diff_female: max_diff_female = diff
+        absdiff = abs(diff)
+        if n_tests < 10:
+            print("Estimated probability for single male:", proba_on_m,
+                  "\nEstimated probabiltiy for single female:", proba_on_f,
+                  "\nAbsolute difference", absdiff, "\n")
 
+    if n_tests >= 10:
+        print("Average probability difference:", absdiff/n_tests)
+        print("max diff benefitting female:", -max_diff_female)
+        print("max diff benefitting male:", max_diff_male)
 
 def create_histogram(args):
     dataset, feature_data = setup_data("../../data/credit/D_train.csv")
@@ -130,7 +147,7 @@ def generate_barchart(decision_maker, dataset, feature_data, feature, target_val
     return ax
 
 
-def generate_histogram_outcome(decision_maker, dataset, feature_data, feature, target_value=1, ax=None):
+def generate_histogram_outcome(decision_maker, dataset, feature_data, feature, target_value=1, ax=None, title=None):
     encoded_features, target = feature_data["encoded_features"], feature_data["target"]
     dataset = dataset[dataset[feature] == target_value]
 
@@ -143,6 +160,8 @@ def generate_histogram_outcome(decision_maker, dataset, feature_data, feature, t
         ax.set_xlabel("amount of loan")
         ax.set_ylabel("amount of applicants")
         ax.legend()
+        if title:
+            ax.set_title(title)
     else:
         plt.hist(X[y == 1]["amount"], 20, label="returned loan", alpha=.5, color="blue")
         plt.hist(X[y == 2]["amount"], 20, label="did not return loan", alpha=.8, color="orange")
@@ -151,7 +170,7 @@ def generate_histogram_outcome(decision_maker, dataset, feature_data, feature, t
         plt.legend()
 
 
-def generate_histogram_action(decision_maker, dataset, feature_data, feature, target_value=1, ax=None):
+def generate_histogram_action(decision_maker, dataset, feature_data, feature, target_value=1, ax=None, title=None, bottom_label="amount of loan"):
     encoded_features, target = feature_data["encoded_features"], feature_data["target"]
     dataset = dataset[dataset[feature] == target_value]
 
@@ -159,23 +178,29 @@ def generate_histogram_action(decision_maker, dataset, feature_data, feature, ta
 
     y_hat = X.apply(decision_maker.get_best_action, axis=1)
 
+
+
     if ax:
         ax.hist(X[y_hat == 1]["amount"], 20, label="granted loan", alpha=.5, color="blue")
         ax.hist(X[y_hat == 0]["amount"], 20, label="refused loan", alpha=.8, color="orange")
 
-        ax.set_xlabel("amount of loan")
-        ax.set_ylabel("amount of applicants")
+        ax.set_xlabel(bottom_label)
         ax.legend()
+        ax.set_ylabel("amount of applicants")
+
+        if title:
+            ax.set_title(title)
+
     else:
         plt.hist(X[y_hat == 1]["amount"], 20, label="granted loan", alpha=.5, color="blue")
         plt.hist(X[y_hat == 0]["amount"], 20, label="refused loan", alpha=.8, color="orange")
 
-        plt.xlabel("amount of loan")
+        plt.xlabel(bottom_label)
         plt.ylabel("amount of applicants")
         plt.legend()
 
 
-def generate_histogram_utility(decision_maker, dataset, feature_data, feature, target_value=1, ax=None):
+def generate_histogram_utility(decision_maker, dataset, feature_data, feature, title=None, target_value=1, ax=None):
     encoded_features, target = feature_data["encoded_features"], feature_data["target"]
     dataset = dataset[dataset[feature] == target_value]
 
@@ -192,6 +217,9 @@ def generate_histogram_utility(decision_maker, dataset, feature_data, feature, t
         ax.set_xlabel("expected_utility")
         ax.set_ylabel("amount of applicants")
         ax.legend()
+
+        if title:
+            ax.set_title(title)
     else:
         plt.hist(U[y==1], 20, label="granted loan", alpha=.5, color="blue")
         plt.hist(U[y==2], 20, label="refused loan", alpha=.8, color="orange")
@@ -201,8 +229,8 @@ def generate_histogram_utility(decision_maker, dataset, feature_data, feature, t
         plt.legend()
 
 
-def credit_worthiness_barchart(Y1, Y0, labels, label1='credit worthy',
-                               label2="credit thief", legend_anchor=0, **subplot_kwargs):
+def credit_worthiness_barchart(Y1, Y0, labels, label1='returned loan',
+                               label2="no returned loan", legend_anchor=0, **subplot_kwargs):
     x = np.arange(len(labels))  # the label locations
     width = 0.35  # the width of the bars
 
