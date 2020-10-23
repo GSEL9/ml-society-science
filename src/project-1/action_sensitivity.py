@@ -60,7 +60,7 @@ def posterior_hypothesis(X, p):
     posterior = np.zeros_like(X, dtype=float)
     for i in range(n_trails):
         
-        # Parameters for prior distribution.
+        # Parameters for Beta prior.
         alpha = 1
         beta = 1
         
