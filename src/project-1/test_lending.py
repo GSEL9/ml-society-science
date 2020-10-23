@@ -129,7 +129,9 @@ def test_decision_maker(X_test: pd.DataFrame, y_test: pd.DataFrame, interest_rat
 def measure_bankers(bankers: List[Banker],
                     data: Tuple[pd.DataFrame, Dict[str, Any]],
                     interest_rate: float,
-                    n_tests: int, prints: bool=True) -> Dict[str, Tuple[float, float]]:
+                    n_tests: int,
+                    prints: bool=True,
+                    target_data=None) -> Dict[str, Tuple[float, float]]:
     """
     Arguments:
     ----------
@@ -140,6 +142,7 @@ def measure_bankers(bankers: List[Banker],
             default: False
         prints: prints results to terminal
             default: True
+        target_data: if target_data is none we assume that data is the target_data
 
     Returns:
     --------
@@ -164,7 +167,12 @@ def measure_bankers(bankers: List[Banker],
         if prints: range_iterator = tqdm(range_iterator)
 
         for i in range_iterator:
-            X_train, X_test, y_train, y_test = train_test_split(X[encoded_features], X[target], test_size=0.2)
+            if target_data is not None:
+                X_train, _, _, _ = train_test_split(X[encoded_features], X[target], test_size=0.2)
+                _, X_test, y_train, y_test = train_test_split(target_data[encoded_features], target_data[target], test_size=0.2)
+            else:
+                X_train, X_test, y_train, y_test = train_test_split(X[encoded_features], X[target], test_size=0.2)
+
             decision_maker.set_interest_rate(interest_rate)
             decision_maker.fit(X_train, y_train)
             Ui, Ri = test_decision_maker(X_test, y_test, interest_rate, decision_maker)
@@ -232,7 +240,7 @@ def main():
     results = measure_bankers(decision_makers, data, interest_rate, n_tests=args.n_tests)
 
     if args.randomized:
-        results_random = measure_bankers(decision_makers, data_random, interest_rate, n_tests=args.n_tests)
+        results_random = measure_bankers(decision_makers, data_random, interest_rate, n_tests=args.n_tests, target_data=X_random)
 
         print("\nPrivacy cost (avg_return_normal - avg_return_privacy)")
         print(results["Group4Banker"][1] - results_random["Group4Banker"][1])

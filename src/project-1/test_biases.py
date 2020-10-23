@@ -45,6 +45,102 @@ def get_trained_model(interest_rate):
                        X_train[feature_data["target"]])
     return decision_maker
 
+def get_preprocessed_german_data():
+    features = ['checking account balance', 'duration', 'credit history',
+                'purpose', 'amount', 'savings', 'employment', 'installment',
+                'marital status', 'other debtors', 'residence time',
+                'property', 'age', 'other installments', 'housing', 'credits',
+                'job', 'persons', 'phone', 'foreign']
+    target = ['repaid']
+    dataframe = pd.read_csv('../../data/credit/german.data', sep=' ',
+                         names=features+target)
+    numeric_features = dataframe[features].select_dtypes(include=[np.number]).columns.tolist()
+    categorical_features = [f for f in features if f not in numeric_features]
+    dataframe['gender'] = dataframe.apply(lambda row: 'Female' if row['marital status'] in ('A92', 'A95') else 'Male', axis=1)
+
+    dataframe = pd.get_dummies(dataframe, columns=categorical_features, drop_first=True)
+    features = dataframe.drop(target, axis=1).select_dtypes(include=[np.number]).columns.tolist()
+
+    return dataframe, features, target
+
+
+def get_gender_outcome_action_from_german_data():
+    pd.options.mode.chained_assignment = None
+    dataset, feature_data = setup_data("../../data/credit/D_train.csv")
+    dataframe, features, target = get_preprocessed_german_data()
+    from sklearn.model_selection import KFold
+    dataframe['action'] = pd.Series(np.zeros(dataframe.shape[0]))
+    decision_maker = Group4Banker()
+    decision_maker.set_interest_rate(0.05)
+    for train, test in KFold(n_splits=5).split(dataframe):
+        decision_maker.fit(dataset[feature_data["encoded_features"]], dataset[feature_data["target"]])
+        for k in test:
+            dataframe['action'].iloc[k] = decision_maker.get_best_action(dataset[feature_data["encoded_features"]].iloc[k])
+
+    Z = np.array([1 if z=='Female' else -1 for z in dataframe['gender'].values])
+    Y = np.array([1 if y==1 else -1 for y in dataframe['repaid'].values])
+    A = np.array([1 if a==1 else -1 for a in dataframe['action'].values])
+
+    return Z, Y, A
+
+def marginal_probability(data, alpha, beta):
+        total_probability = 1
+        log_probability = 0
+        for t in range(len(data)):
+            p = alpha / (alpha + beta)
+            if (data[t] > 0):
+                log_probability += np.log(p)
+                alpha += 1
+            else:
+                log_probability += np.log(1 - p)
+                beta +=1
+        return np.exp(log_probability)
+
+
+def conditional_independence(A,Y,Z):
+    P_D_mu0 = 0
+    P_D_mu1 = 0
+
+    table = np.zeros((2, 7))
+
+    for i, y in enumerate([-1, 1]):
+        table[i][0] = y
+        ## P(A | Y, Z = 1)
+        positive = (Y==y) & (Z==1)
+        positive_alpha = sum(A[positive]==1)
+        positive_beta = sum(A[positive]==-1)
+        positive_ratio = positive_alpha / (positive_alpha + positive_beta)
+
+        ## P(A | Y, Z = - 1)
+        negative = (Y==y) & (Z==-1)
+        negative_alpha = sum(A[negative]==1)
+        negative_beta = sum(A[negative]==-1)
+        negative_ratio = negative_alpha / (negative_alpha + negative_beta)
+
+        diff = abs(positive_ratio - negative_ratio)
+        table[i][1] = diff
+        #  print("y: ", y, "Difference: ", diff)
+
+        ##Calculate the marginals for each model
+        P_D_positive = marginal_probability(A[positive], 1, 1)
+        P_D_negative = marginal_probability(A[negative], 1, 1)
+        P_D = marginal_probability(A[(Y==y)], 1, 1)
+
+        #         print("Marginal likelihoods: ", P_D, P_D_negative, P_D_positive)
+        table[i][2] = P_D
+        table[i][3] = P_D_negative
+        table[i][4] = P_D_positive
+
+        ##combining all the marginal probabilities
+        P_D_mu0 += np.log(P_D)
+        P_D_mu1 += np.log(P_D_positive) + np.log(P_D_negative)
+        #  print(f"P_D_mu0={P_D_mu0},P_D_mu1 ={P_D_mu1}")
+        table[i][5] = P_D_mu0
+        table[i][6] = P_D_mu1
+
+    return pd.DataFrame(dict(zip("y, diff, P_D, P_D_negative, P_D_positive, P_D_mu0, P_D_mu1".split(", "), table.T)))
+
+
 def get_encoded_features():
     return setup_data("../../data/credit/D_train.csv")[1]["encoded_features"]
 
