@@ -200,6 +200,39 @@ def generate_histogram_utility(decision_maker, dataset, feature_data, feature, t
         plt.ylabel("amount of applicants")
         plt.legend()
 
+
+def credit_worthiness_barchart(Y1, Y0, labels, label1='credit worthy',
+                               label2="credit thief", legend_anchor=0, **subplot_kwargs):
+    x = np.arange(len(labels))  # the label locations
+    width = 0.35  # the width of the bars
+
+    fig, ax = plt.subplots(**subplot_kwargs)
+    rects1 = ax.bar(x - width/2, Y1, width, label=label1, alpha=0.8, color="blue")
+    rects2 = ax.bar(x + width/2, Y0, width, label=label2, alpha=0.8, color="orange")
+
+    # Add some text for labels, title and custom x-axis tick labels, etc.
+    ax.set_ylabel('Loan applicants')
+    ax.set_title('Distribution of returns')
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels)
+    ax.legend(loc=legend_anchor)
+
+
+    def autolabel(rects):
+        """Attach a text label above each bar in *rects*, displaying its height."""
+        for rect in rects:
+            height = rect.get_height()
+            ax.annotate('{}'.format(height),
+                        xy=(rect.get_x() + rect.get_width() / 2, height),
+                        xytext=(0, 3),  # 3 points vertical offset
+                        textcoords="offset points",
+                        ha='center', va='bottom')
+
+    autolabel(rects1)
+    autolabel(rects2)
+    fig.tight_layout()
+
+
 def main():
     args = parse_args()
     measure_probability_difference(args)
