@@ -74,24 +74,18 @@ class Group4Recommender:
     ## to get an estimate of the utility.
     ##
     ## The policy should be a recommender that implements get_action_probability()
-    def estimate_utility(self, data: np.ndarray, actions: int, outcome, policy=None):
-        actions == [1,0,1,0,0,1,1,1]
-        outcome == [0, 1, 1, 1, 0, ---]
-        data == [[], []], []
+    def estimate_utility(self, data: np.ndarray, actions: Iterable[bool], outcome: Iterable[bool], policy=None):
         assert np.ndim(actions) == 1
 
         # Utility is the expected reward
         r = -0.1 * actions + outcome
 
         if policy is not None:
-            U
-            for i, x in enumerate(data):
-
-
-                p_a0, p_a1 = p_a = policy.get_action_probabilities(x)
-                r_a0 = outcome
-                r_a1 = outcome - 0.1
-            return U,
+            pi_a = np.fromiter(map(policy.get_action_probabilities, data), "float64")
+            # shape (n, 2)
+            pi_a0, pi_a1 = pi_a.T
+            # we measure probability based on action 1 (probability of giving treamtent)
+            
         else:
             return r.mean(), r.std()
         # return np.sum(-0.1 * actions + outcome)
