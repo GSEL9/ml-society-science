@@ -7,7 +7,7 @@ import numpy as np
 
 
 def confidence_interval(data: Union[List, np.ndarray], alpha: float=0.05) -> Tuple:
-	"""Calculate error bounds of normal ditributed data with 1 - alpha confidence.
+	"""Calculate error bounds of normal ditributed data with 1 - alpha confidence. 
 	"""
 
 	m, se = np.mean(data), stats.sem(data)
@@ -16,14 +16,22 @@ def confidence_interval(data: Union[List, np.ndarray], alpha: float=0.05) -> Tup
 	return m - h, m + h
 
 
-def expected_utility(data, actions, outcome):
+def expected_utility(data: np.ndarray, actions: np.ndarray, outcome: np.ndarray, 
+					 return_ci=True) -> Union[Tuple, float]: 
+	"""Calculate the expected utility from data.
 
-	# TEMP:
-	probas_a0 = np.random.random(size=len(actions))
-	probas_a1 = 1 - probas_a0
+	Args:
+		data: Feature matrix.
+		actions: Vector of actions.
+		outcome: Vector of outcomes.
+		return_ci: Calculate a confidence interval for the utility estimate.
 
-	#probas = np.asarray([policy.get_probas(x) for x in data])
-	#probas_a0, probas_a1 = zip(*probas)
+	Returns:
+		The expected utility with optinal confidence interval.
+	"""
+
+	probas = np.asarray([policy.get_probas(x) for x in data])
+	probas_a0, probas_a1 = zip(*probas)
 
 	U_expected = sum(outcome * probas_a0 + (outcome - 0.1) * probas_a1)
 
@@ -39,7 +47,10 @@ def expected_utility(data, actions, outcome):
 	U_lo = sum(outcome * probas_a0_lo + (outcome - 0.1) * (1 - probas_a0_lo))
 	U_hi = sum(outcome * probas_a0_hi + (outcome - 0.1) * (1 - probas_a0_hi))
 
-	return U_lo, U_expected, U_hi
+	if return_ci:
+		return U_lo, U_expected, U_hi
+
+	return U_expected
 
 
 if __name__ == "__main__":

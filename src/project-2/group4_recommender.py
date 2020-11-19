@@ -23,6 +23,9 @@
 from sklearn import linear_model
 import numpy as np
 
+from estimate_utility import expected_utility
+
+
 class Group4Recommender:
 
     #################################
@@ -81,13 +84,15 @@ class Group4Recommender:
         r = -0.1 * actions + outcome
 
         if policy is not None:
-            pi_a = np.fromiter(map(policy.get_action_probabilities, data), "float64")
+            #pi_a = np.fromiter(map(policy.get_action_probabilities, data), "float64")
             # shape (n, 2)
-            pi_a0, pi_a1 = pi_a.T
+            #pi_a0, pi_a1 = pi_a.T
             # we measure probability based on action 1 (probability of giving treamtent)
+
+            return expected_utility(data, actions, outcome, return_ci=True)
             
         else:
-            return r.mean(), r.std()
+            return -1.0 * r.std(), r.mean(), r.std()
         # return np.sum(-0.1 * actions + outcome)
 
     # Return a distribution of effects for a given person's data and a specific treatment.
