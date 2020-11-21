@@ -84,13 +84,12 @@ class Group4Recommender:
         r = -0.1 * actions + outcome
 
         if policy is not None:
-            #pi_a = np.fromiter(map(policy.get_action_probabilities, data), "float64")
+            pi_a = np.fromiter(map(policy.get_action_probabilities, data), "float64")
             # shape (n, 2)
-            #pi_a0, pi_a1 = pi_a.T
+            pi_a0, pi_a1 = pi_a.T
             # we measure probability based on action 1 (probability of giving treamtent)
 
-            return expected_utility(data, actions, outcome, return_ci=True)
-            
+            return expected_utility(data, actions, outcome, policy, return_ci=True)
         else:
             return -1.0 * r.std(), r.mean(), r.std()
         # return np.sum(-0.1 * actions + outcome)
@@ -98,6 +97,7 @@ class Group4Recommender:
     # Return a distribution of effects for a given person's data and a specific treatment.
     # This should be an numpy.array of length self.n_outcomes
     def predict_proba(self, data, treatment):
+        # Assuming data is vector and treatment is scalar
         return np.zeros(self.n_outcomes)
 
     # Return a distribution of recommendations for a specific user datum

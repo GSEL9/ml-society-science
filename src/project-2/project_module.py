@@ -7,13 +7,15 @@ from sklearn.cluster import KMeans
 
 
 
-def kmeans_cluster_data(X, k=2, plot=True, fig=None, ax=None):
+def kmeans_cluster_data(X, k=2, plot=True, fig=None, ax=None, seed=None):
     """Takes in a dataset and clusters it for the n dimensions of the dataset.
     If plot is enabled, the dataset is then reduced using pca before being plotted in a 2 dimensional space
     Dimensions are kept for the clusterer
 
     returns labels"""
-    clusterer = KMeans(n_clusters=k, random_state=SEED)
+    if seed is None:
+        seed = 42
+    clusterer = KMeans(n_clusters=k, random_state=seed)
     labels = clusterer.fit_predict(X)
 
     if plot:

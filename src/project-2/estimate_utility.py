@@ -3,11 +3,11 @@ from typing import Tuple, List, Union
 from scipy import stats
 
 import pandas as pd
-import numpy as np 
+import numpy as np
 
 
 def confidence_interval(data: Union[List, np.ndarray], alpha: float=0.05) -> Tuple:
-	"""Calculate error bounds of normal ditributed data with 1 - alpha confidence. 
+	"""Calculate error bounds of normal ditributed data with 1 - alpha confidence.
 	"""
 
 	m, se = np.mean(data), stats.sem(data)
@@ -16,8 +16,8 @@ def confidence_interval(data: Union[List, np.ndarray], alpha: float=0.05) -> Tup
 	return m - h, m + h
 
 
-def expected_utility(data: np.ndarray, actions: np.ndarray, outcome: np.ndarray, 
-					 return_ci=True) -> Union[Tuple, float]: 
+def expected_utility(data: np.ndarray, actions: np.ndarray, outcome: np.ndarray, policy,
+					 return_ci=True) -> Union[Tuple, float]:
 	"""Calculate the expected utility from data.
 
 	Args:
@@ -60,6 +60,6 @@ if __name__ == "__main__":
 	outcome = pd.read_csv('data/medical/historical_Y.dat', header=None, sep=" ").values
 
 	# NB: Should kill redundant dimension.
-	outcome = np.squeeze(outcome)	
+	outcome = np.squeeze(outcome)
 
 	expected_utility(features, actions, outcome)
