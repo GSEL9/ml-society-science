@@ -24,7 +24,7 @@ from sklearn import linear_model
 import numpy as np
 
 from estimate_utility import expected_utility
-
+from typing import Iterable
 
 class Group4Recommender:
 

@@ -1,7 +1,7 @@
-import abc
+from abc import abstractmethod, ABC
 import sklearn
 
-class Recommender(abc.ABC):
+class Recommender(ABC):
     """
     Abstract base class for recommender
     """
@@ -15,22 +15,11 @@ class Recommender(abc.ABC):
         return outcome
 
     def set_reward(self, reward):
-        "Set the reward function r(a, y)""
+        "Set the reward function r(a, y)"
         self.reward = reward
 
-    def fit_data(self, data):
-        """
-        Fit a model from patient data.
 
-        This will generally speaking be an
-        unsupervised model. Anything from a Gaussian mixture model to a
-        neural network is a valid choice.  However, you can give special
-        meaning to different parts of the data, and use a supervised
-        model instead.
-        """
-        pass
-
-
+    @abstractmethod
     def fit_treatment_outcome(self, data, actions, outcome):
         """
         Fit a model from patient data, actions and their effects
@@ -38,6 +27,37 @@ class Recommender(abc.ABC):
         This model can then be used in estimate_utility(), predict_proba() and recommend()
         """
         pass
+
+
+    @abstractmethod
+    def recommend(self, user_data):
+        """
+        Return recommendations for a specific user datum
+        This should be an integer in range(self.n_actions)
+        """
+        pass
+
+
+    @abstractmethod
+    def observe(self, user, action, outcome):
+        """
+        Observe the effect of an action. This is an opportunity for you
+        to refit your models, to take the new information into account.
+        """
+        pass
+
+
+    @abstractmethod
+    def final_analysis(self):
+        """
+        After all the data has been obtained, do a final analysis. This can consist of a number of things:
+        1. Recommending a specific fixed treatment policy
+        2. Suggesting looking at specific genes more closely
+        3. Showing whether or not the new treatment might be better than the old, and by how much.
+        4. Outputting an estimate of the advantage of gene-targeting treatments versus the best fixed treatment
+        """
+        pass
+
 
     def estimate_utility(self, data, actions, outcome, policy=None):
         """
@@ -54,12 +74,14 @@ class Recommender(abc.ABC):
         """
         pass
 
+
     def predict_proba(self, data, treatment):
         """
         Return a distribution of effects for a given person's data and a specific treatment.
         This should be an numpy.array of length self.n_outcomes
         """
         pass
+
 
     def get_action_probabilities(self, user_data):
         """
@@ -69,40 +91,19 @@ class Recommender(abc.ABC):
         pass
 
 
-    def recommend(self, user_data):
+    def fit_data(self, data):
         """
-        Return recommendations for a specific user datum
-        This should be an integer in range(self.n_actions)
-        """
-        pass
+        Fit a model from patient data.
 
-    def observe(self, user, action, outcome):
-        """
-        Observe the effect of an action. This is an opportunity for you
-        to refit your models, to take the new information into account.
-        """
-        pass
-
-    def final_analysis(self):
-        """
-        After all the data has been obtained, do a final analysis. This can consist of a number of things:
-        1. Recommending a specific fixed treatment policy
-        2. Suggesting looking at specific genes more closely
-        3. Showing whether or not the new treatment might be better than the old, and by how much.
-        4. Outputting an estimate of the advantage of gene-targeting treatments versus the best fixed treatment
+        This will generally speaking be an
+        unsupervised model. Anything from a Gaussian mixture model to a
+        neural network is a valid choice.  However, you can give special
+        meaning to different parts of the data, and use a supervised
+        model instead.
         """
         pass
 
 
-class HistoricalRecommender(Recommender):
-    """
-    The historical recommender
-    """
-    def __init__(self):
-        """
-        clf.fit(X, a)
-        """
-        pass
 
 class ImprovedRecommender(Recommender):
     # TODO
