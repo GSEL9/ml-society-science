@@ -1,5 +1,6 @@
 import abc
 import sklearn
+
 class Recommender(abc.ABC):
     """
     Abstract base class for recommender
@@ -10,11 +11,11 @@ class Recommender(abc.ABC):
         self.reward = self._default_reward
 
     def _default_reward(self, action, outcome):
-        ## By default, the reward is just equal to the outcome, as the actions play no role.
+        "By default, the reward is just equal to the outcome, as the actions play no role."
         return outcome
 
     def set_reward(self, reward):
-        # Set the reward function r(a, y)
+        "Set the reward function r(a, y)""
         self.reward = reward
 
     def fit_data(self, data):
@@ -27,8 +28,7 @@ class Recommender(abc.ABC):
         meaning to different parts of the data, and use a supervised
         model instead.
         """
-        print("Preprocessing data")
-        return None
+        pass
 
 
     def fit_treatment_outcome(self, data, actions, outcome):
@@ -37,8 +37,7 @@ class Recommender(abc.ABC):
         Here we assume that the outcome is a direct function of data and actions
         This model can then be used in estimate_utility(), predict_proba() and recommend()
         """
-        print("Fitting treatment outcomes")
-        return None
+        pass
 
     def estimate_utility(self, data, actions, outcome, policy=None):
         """
@@ -53,21 +52,21 @@ class Recommender(abc.ABC):
 
         The policy should be a recommender that implements get_action_probability()
         """
-        return 0
+        pass
 
     def predict_proba(self, data, treatment):
         """
         Return a distribution of effects for a given person's data and a specific treatment.
         This should be an numpy.array of length self.n_outcomes
         """
-        return numpy.zeros(self.n_outcomes)
+        pass
 
     def get_action_probabilities(self, user_data):
         """
         # Return a distribution of recommendations for a specific user datum
         # This should a numpy array of size equal to self.n_actions, summing up to 1
         """
-        return np.ones(self.n_actions) / self.n_actions;
+        pass
 
 
     def recommend(self, user_data):
@@ -75,14 +74,14 @@ class Recommender(abc.ABC):
         Return recommendations for a specific user datum
         This should be an integer in range(self.n_actions)
         """
-        return np.random.choice(self.n_actions, p = self.get_action_probabilities(user_data))
+        pass
 
     def observe(self, user, action, outcome):
         """
         Observe the effect of an action. This is an opportunity for you
         to refit your models, to take the new information into account.
         """
-        return None
+        pass
 
     def final_analysis(self):
         """
@@ -92,18 +91,18 @@ class Recommender(abc.ABC):
         3. Showing whether or not the new treatment might be better than the old, and by how much.
         4. Outputting an estimate of the advantage of gene-targeting treatments versus the best fixed treatment
         """
-        return None
+        pass
 
 
 class HistoricalRecommender(Recommender):
-    # TODO: Estimates the former poilicy
-
-    def __init__(self)
-
     """
-    clf.fit(X, a)
+    The historical recommender
     """
-
+    def __init__(self):
+        """
+        clf.fit(X, a)
+        """
+        pass
 
 class ImprovedRecommender(Recommender):
     # TODO
