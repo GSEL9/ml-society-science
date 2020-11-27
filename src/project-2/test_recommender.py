@@ -3,13 +3,15 @@ import pandas as pd
 import random_recommender
 import group4_recommender
 import historical_recommender
+import improved_recommender
 import data_generation
 import argparse
 
 policies = {
     "random": random_recommender.RandomRecommender,
     "group4": group4_recommender.Group4Recommender,
-    "historical": historical_recommender.HistoricalRecommender
+    "historical": historical_recommender.HistoricalRecommender,
+    "improved": improved_recommender.ImprovedRecommender
 }
 
 def parse_arguments():
@@ -37,9 +39,7 @@ def test_policy(generator, policy, reward_function, T):
     return u
 
 
-if __name__ == "__main__":
-    args = parse_arguments()
-
+def main(args):
     n_tests = args.n_tests
 
     features = pd.read_csv('data/medical/historical_X.dat', header=None, sep=" ").values
@@ -69,3 +69,7 @@ if __name__ == "__main__":
         print("Total reward:", result)
         # print("Final analysis of results")
         policy.final_analysis()
+
+if __name__ == "__main__":
+    args = parse_arguments()
+    main(args)

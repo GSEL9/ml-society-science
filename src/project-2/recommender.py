@@ -105,11 +105,6 @@ class Recommender(ABC):
 
 
 
-class ImprovedRecommender(Recommender):
-    # TODO
-    pass
-
-
 class AdaptiveRecommender(Recommender):
     # TODO
     pass
