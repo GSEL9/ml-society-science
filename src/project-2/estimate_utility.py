@@ -1,5 +1,6 @@
 from typing import Tuple, List, Union
 
+from sklearn.linear_model import LogisticRegression
 from scipy import stats
 import pandas as pd
 import numpy as np

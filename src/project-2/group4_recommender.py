@@ -5,8 +5,10 @@ import numpy as np
 from estimate_utility import expected_utility
 from typing import Iterable
 
+
 def utility(y, a):
     return -0.1 * a + y
+
 
 class Group4Recommender:
     def __init__(self, n_actions, n_outcomes):
@@ -39,17 +41,23 @@ class Group4Recommender:
 
     def estimate_utility(self, data: np.ndarray, actions: Iterable[bool], outcome: Iterable[bool], policy=None):
         assert np.ndim(actions) == 1
-
-        # Utility is the expected reward
-        r = -0.1 * actions + outcome
+        assert np.ndim(outcome) == 1
 
         if policy is not None:
-            return expected_utility(data, actions, outcome, policy, return_ci=True)
+
+            # TEMP: Fixed model params.
+            policy_actions = take_action(data, actions, outcome,
+                                         penalty='l1', max_iter=1000)
+
+            return expected_utility(data, policy_actions, outcome, policy, return_ci=True)
+
         else:
+
+            # Utility is the expected reward
+            r = -0.1 * actions + outcome
+
             return -1.0 * r.std(), r.mean(), r.std()
-        # return np.sum(-0.1 * actions + outcome)
-
-
+        
     # def predict_proba(self, data, treatment):
         # return np.zeros(self.n_outcomes)
 
