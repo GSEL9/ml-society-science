@@ -16,6 +16,7 @@ def parse_arguments():
     p = argparse.ArgumentParser()
     p.add_argument("policy", type=str)
     p.add_argument("n_tests", nargs="?", type=int, default=1000)
+    p.add_argument("-s","--seed", type=int, default=None)
     return p.parse_args()
 
 def default_reward_function(action, outcome):
@@ -56,7 +57,7 @@ if __name__ == "__main__":
         print(descriptions[i])
 
         # print("Setting up simulator")
-        generator = data_generation.DataGenerator(matrices="./big_generating_matrices.mat")
+        generator = data_generation.DataGenerator(matrices="./big_generating_matrices.mat", seed=args.seed)
         # print("Setting up policy")
         policy = policy_factory(generator.get_n_actions(), generator.get_n_outcomes())
         ## Fit the policy on historical data first
