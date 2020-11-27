@@ -14,6 +14,7 @@ policies = {
 
 def parse_arguments():
     p = argparse.ArgumentParser()
+    p.add_argument("policy", type=str)
     p.add_argument("n_tests", nargs="?", type=int, default=1000)
     return p.parse_args()
 
@@ -47,7 +48,7 @@ if __name__ == "__main__":
     labels = features[:,128] + features[:,129]*2
 
     #TODO: make this configurable
-    policy_factory = policies["random"]
+    policy_factory = policies[args.policy]
 
     descriptions = ["Two treatments", "Additional treatment"]
 
@@ -59,11 +60,11 @@ if __name__ == "__main__":
         # print("Setting up policy")
         policy = policy_factory(generator.get_n_actions(), generator.get_n_outcomes())
         ## Fit the policy on historical data first
-        # print("Fitting historical data to the policy")
+        print("Fitting historical data to the policy")
         policy.fit_treatment_outcome(features, actions, outcome)
         ## Run an online test with a small number of actions
-        # print("Running an online test")
+        print("Running an online test")
         result = test_policy(generator, policy, default_reward_function, n_tests)
-        # print("Total reward:", result)
+        print("Total reward:", result)
         # print("Final analysis of results")
         policy.final_analysis()
