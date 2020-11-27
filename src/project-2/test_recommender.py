@@ -4,6 +4,7 @@ import random_recommender
 import group4_recommender
 import historical_recommender
 import improved_recommender
+import adaptive_recommender
 import data_generation
 import argparse
 
@@ -11,7 +12,8 @@ policies = {
     "random": random_recommender.RandomRecommender,
     "group4": group4_recommender.Group4Recommender,
     "historical": historical_recommender.HistoricalRecommender,
-    "improved": improved_recommender.ImprovedRecommender
+    "improved": improved_recommender.ImprovedRecommender,
+    "adaptive": adaptive_recommender.AdaptiveRecommender
 }
 
 def parse_arguments():

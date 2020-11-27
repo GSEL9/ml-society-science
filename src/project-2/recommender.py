@@ -102,9 +102,3 @@ class Recommender(ABC):
         model instead.
         """
         pass
-
-
-
-class AdaptiveRecommender(Recommender):
-    # TODO
-    pass
