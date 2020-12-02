@@ -16,12 +16,12 @@ class Policy(ABC):
 	@abstractmethod
 	def fit(self, data: np.ndarray, actions: np.ndarray, **kwargs):
 		"""Adapt the decision rule to data."""
-		pass
+		raise NotImplementedError("Function fit() not implemented for Policy.")
 
 	@abstractmethod
 	def take_action(data: np.ndarray, actions: np.ndarray, outcome: np.ndarray, **kwargs):
 		"""Select an action."""
-		pass
+		raise NotImplementedError("Function take_action() not implemented for Policy.")
 
 
 class ImprovedPolicy(Policy):
@@ -58,7 +58,6 @@ class ImprovedPolicy(Policy):
 			self.classifier = LogisticRegression(random_state=self.random_state, 
 												 solver="liblinear",
 												 **kwargs)
-
 			self.classifier.fit(data, actions)
 
 		return self
@@ -71,7 +70,7 @@ class ImprovedPolicy(Policy):
 
 		P = self.classifier.predict_proba(data)
 
-		return 1 - np.greater(outcome * P[:, 0], (outcome - 0.1) * (1 - P[:, 1])).astype(int)
+		return 1 - np.greater(outcome * P[:, 0], (outcome - 0.1) * P[:, 1])
 
 
 class DeepPolicy(Policy):
@@ -127,7 +126,7 @@ class DeepPolicy(Policy):
 
 		P = self.classifier.predict_proba(data)
 
-		return 1 - np.greater(outcome * P[:, 0], (outcome - 0.1) * (1 - P[:, 1])).astype(int)
+		return 1 - np.greater(outcome * P[:, 0], (outcome - 0.1) * P[:, 1])
 
 
 if __name__ == "__main__":
@@ -139,6 +138,6 @@ if __name__ == "__main__":
 	# NB: Should kill redundant dimension.
 	outcome = np.squeeze(outcome)
 	policy = ImprovedPolicy()
-	actions = policy.take_action(data, actions, outcome, verbose=1, optimize=True)
+	actions = policy.take_action(data, actions, outcome, verbose=1, optimize=False)
 	print(sum(actions))
-
+	print(len(actions))
