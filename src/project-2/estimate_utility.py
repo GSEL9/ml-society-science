@@ -30,8 +30,9 @@ def expected_utility(data: np.ndarray, actions: np.ndarray, outcome: np.ndarray,
 		The expected utility with optinal confidence interval.
 	"""
 
-	probas = np.asarray([policy.get_probas(x) for x in data])
-	probas_a0, probas_a1 = zip(*probas)
+	#probas = np.asarray([policy.get_probas(x) for x in data])
+	#probas_a0, probas_a1 = zip(*probas)
+	probas_a0, probas_a1 = zip(*policy.get_probas(data))
 
 	U_expected = sum(outcome * probas_a0 + (outcome - 0.1) * probas_a1)
 
@@ -48,7 +49,7 @@ def expected_utility(data: np.ndarray, actions: np.ndarray, outcome: np.ndarray,
 	U_hi = sum(outcome * probas_a0_hi + (outcome - 0.1) * (1 - probas_a0_hi))
 
 	if return_ci:
-		return U_lo, U_expected, U_hi
+		return U_lo / data.shape[0], U_expected / data.shape[0], U_hi / data.shape[0]
 
 	return U_expected
 

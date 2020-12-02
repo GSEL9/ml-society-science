@@ -7,6 +7,8 @@ import tensorflow as tf
 import pandas as pd
 import numpy as np
 
+from nn_model import train_ann_model
+
 
 class Policy(ABC):
 	"""
@@ -19,14 +21,24 @@ class Policy(ABC):
 		raise NotImplementedError("Function fit() not implemented for Policy.")
 
 	@abstractmethod
-	def take_action(data: np.ndarray, actions: np.ndarray, outcome: np.ndarray, **kwargs):
+	def get_probas(self, data: np.ndarray, **kwargs):
 		"""Select an action."""
+
+		raise NotImplementedError("Function get_probas() not implemented for Policy.")
+
+	@abstractmethod
+	def take_action(self, data: np.ndarray, actions: np.ndarray, outcome: np.ndarray, 
+					**kwargs):
+		"""Select an action."""
+
 		raise NotImplementedError("Function take_action() not implemented for Policy.")
 
 
 class ImprovedPolicy(Policy):
 
 	def __init__(self, random_state=42):
+
+		#super().__init__(self)
 
 		self.random_state = random_state
 		self.classifier = None 
@@ -62,74 +74,63 @@ class ImprovedPolicy(Policy):
 
 		return self
 
+	def get_probas(self, data: np.ndarray, **kwargs):
+		"""Select an action."""
+
+		return self.classifier.predict_proba(data)
+
 	def take_action(self, data: np.ndarray, actions: np.ndarray, outcome: np.ndarray, 
 					**kwargs):
+		"""Select an action."""
 
 		if self.classifier is None:
 			self.fit(data, np.squeeze(outcome), **kwargs)
 
-		P = self.classifier.predict_proba(data)
+		P = self.get_probas(data)
 
 		return 1 - np.greater(outcome * P[:, 0], (outcome - 0.1) * P[:, 1])
 
 
 class DeepPolicy(Policy):
 
-	def __init__(self, epochs, learning_rate, random_state=42):
+	def __init__(self, random_state=42):
 
-		self.epochs = epochs
-		self.learning_rate = learning_rate
 		self.random_state = random_state
-
 		self.classifier = None
-
-	def _initalize(self, X):
-
-		init = tf.random_normal_initializer(seed=self.random_state)
-
-		self.W0 = tf.Variable(init(shape=[X.shape[1], X.shape[0]], dtype=tf.float32))
-		self.b0 = tf.Variable(init(shape=[X.shape[0]], dtype=tf.float32))
-
-		self.W1 = tf.Variable(init(shape=[X.shape[0]], dtype=tf.float32))
-		self.b1 = tf.Variable(init(shape=[X.shape[0]], dtype=tf.float32))
-
-	# TODO:
-	def predict(self):
-
-		pass
 
 	def fit(self, data: np.ndarray, actions: np.ndarray, verbose=0, optimize=False, 	
 			**kwargs):
+		"""Train a model to estimate the probability of an outcome from data.
 
-		def loss():
+		Args:
+			data: Data matrix.
+			actions: Actions for each data sample.
+		"""
 
-			# Estimate probability using MLP.
-			p_a0 = tf.math.sigmoid(tf.nn.relu(X @ self.W0 + self.b0) @ self.W1 + self.b1)
-			p_a1 = 1 - p_a0
+		self.classifier = train_ann_model(data, actions, outcome, **kwargs)
 
-			return tf.reduce_sum(y * p_a0 + (p_a0 - 0.1) * p_a0)
+	def get_probas(self, data: np.ndarray, **kwargs):
+		"""Select an action."""
 
-		self._initalize(data)
+		p0 = self.classifier(data).numpy()
 
-		X = tf.cast(data, dtype=tf.float32)
-		y = tf.cast(outcome, dtype=tf.float32)
-
-		optimizer = tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
-		for _ in range(self.epochs):
-			optimizer.minize(self.loss, [decision_variable])
+		return np.hstack([p0, 1 - p0])
 
 	def take_action(self, data: np.ndarray, actions: np.ndarray, outcome: np.ndarray, 
 					**kwargs):
+		"""Select an action."""
 
 		if self.classifier is None:
 			self.fit(data, np.squeeze(outcome), **kwargs)
 
-		P = self.classifier.predict_proba(data)
-
+		P = self.get_probas(data)
+		print(P)
 		return 1 - np.greater(outcome * P[:, 0], (outcome - 0.1) * P[:, 1])
 
 
 if __name__ == "__main__":
+
+	from estimate_utility import expected_utility
 
 	data = pd.read_csv('data/medical/historical_X.dat', header=None, sep=" ").values
 	actions = pd.read_csv('data/medical/historical_A.dat', header=None, sep=" ").values
@@ -137,7 +138,13 @@ if __name__ == "__main__":
 
 	# NB: Should kill redundant dimension.
 	outcome = np.squeeze(outcome)
-	policy = ImprovedPolicy()
-	actions = policy.take_action(data, actions, outcome, verbose=1, optimize=False)
-	print(sum(actions))
-	print(len(actions))
+	
+	#policy = ImprovedPolicy()
+	#policy.fit(data, actions)
+
+	policy = DeepPolicy()
+	policy.fit(data, actions, n_epochs=10, batch_size=1000)
+	policy_actions = policy.take_action(data, actions, outcome, verbose=1, optimize=False)
+	print(np.sum(policy_actions))
+
+	#print(expected_utility(data, policy_actions, outcome, policy, return_ci=True))

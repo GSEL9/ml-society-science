@@ -69,16 +69,32 @@ def grad(model, data, outcome):
 
 # QUESTION: Save loss?
 def train_ann_model(data: np.ndarray, actions: np.ndarray, outcome: np.ndarray,
-	  			    n_epochs: int=100, learning_rate: float=0.001):
+	  			    n_epochs: int=100, learning_rate: float=0.001, batch_size=0):
+
+	dset_data = tf.data.Dataset.from_tensor_slices(data)
+	dset_outcome = tf.data.Dataset.from_tensor_slices(outcome)
 
 	optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
 	
 	model = ANN()
 	for _ in range(n_epochs):
 
-		loss_value, grads = grad(model, data, outcome)
+		if batch_size > 0:
 
-		optimizer.apply_gradients(zip(grads, model.trainable_variables))
+			data_batches = dset_data.batch(batch_size)
+			outcome_batches = dset_outcome.batch(batch_size)
+
+			for data_i, outcome_i in zip(data_batches, outcome_batches):
+
+				loss_value, grads = grad(model, data_i, outcome_i.numpy())
+
+				optimizer.apply_gradients(zip(grads, model.trainable_variables))
+
+		else:
+
+			loss_value, grads = grad(model, data, outcome)
+
+			optimizer.apply_gradients(zip(grads, model.trainable_variables))
 
 	return model 
 
