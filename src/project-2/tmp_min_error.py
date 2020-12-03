@@ -13,7 +13,7 @@ class MinErrorPolicy(Policy):
 		self.L = None 
 
 	def fit(self, data, outcome):
-		"""Train the model."""
+		"""Estimate prior probabilities and likelihoods."""
 
 		# Update priors.
 		self.priors[0] = np.sum(outcome == 0) / len(outcome)
@@ -26,13 +26,19 @@ class MinErrorPolicy(Policy):
 		self.L[0] = np.sum(data[outcome == 0], axis=0) / np.sum(data[outcome == 0])
 		self.L[1] = np.sum(data[outcome == 1], axis=0) / np.sum(data[outcome == 1])
 
-	# TODO: Implement updates according to Bayes rule.
-	# NOTE: Remeber to scale by sum over all outcomes.
-	def update(self, data, outcome):
+	def observe(self, data, outcome):
+		"""Update prior probabilities and likelihoods."""
 
-		raise NotImplementedError("")
+		priors_prev = self.priors.copy()
+		L_prev = self.L.copy()
+
+		self.fit(data, outcome)
+
+		self.priors = self.priors * priors_prev
+		self.L = self.L * L_prev
 
 	def _get_probas(self, x):
+		# Discriminant functions.
 
 		C0 = x * np.log(self.L[0] / self.L[1])
 		C1 = x * np.log(self.L[1] / self.L[0])
@@ -40,15 +46,16 @@ class MinErrorPolicy(Policy):
 		g1 = np.sum(C0 + np.log(1 - self.L[0])) + np.log(self.priors[0])
 		g2 = np.sum(C1 + np.log(1 - self.L[1])) + np.log(self.priors[1])
 
-		return 1 - g1 / (g1 + g2), g1 / (g1 + g2)
+		p = g1 / (g1 + g2)
+
+		return 1 - p, p
 
 	def get_probas(self, data):
-		"""Discriminant function."""
+		"""Estimates probailities for each action."""
 
 		return np.array([self._get_probas(x) for x in data], dtype=float)
 
-	def take_action(self, data: np.ndarray, actions: np.ndarray, outcome: np.ndarray, 
-					**kwargs):
+	def take_action(self, data: np.ndarray, actions: np.ndarray, outcome: np.ndarray, **kwargs):
 		"""Select an action."""
 
 		return np.argmax(self.get_probas(data), axis=1)
@@ -73,7 +80,14 @@ if __name__ == "__main__":
 	policy.fit(data, outcome)
 	policy_actions = policy.take_action(data, actions, outcome)
 	print(np.sum(policy_actions))
-	#print(policy.get_probas(data))
-	#print(policy_actions.size, actions.size)
-	#print(np.sum(policy_actions == actions) / actions.size)
 	print(expected_utility(data, policy_actions, outcome, policy, return_ci=True))
+	policy.observe(data, outcome)
+	print(np.sum(policy_actions))
+	print(expected_utility(data, policy_actions, outcome, policy, return_ci=True))
+	policy.observe(data, outcome)
+	print(np.sum(policy_actions))
+	print(expected_utility(data, policy_actions, outcome, policy, return_ci=True))
+	policy.observe(data, outcome)
+	print(np.sum(policy_actions))
+	print(expected_utility(data, policy_actions, outcome, policy, return_ci=True))
+	
