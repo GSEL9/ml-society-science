@@ -69,7 +69,7 @@ def main(args):
         print("Running an online test")
         result = test_policy(generator, policy, default_reward_function, n_tests)
         print("Total reward:", result)
-        # print("Final analysis of results")
+        print("*** Final analysis of recommender ***")
         policy.final_analysis()
 
 if __name__ == "__main__":

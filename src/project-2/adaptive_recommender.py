@@ -25,10 +25,12 @@ class AdaptiveRecommender(ImprovedRecommender):
         # important: make sure to cast to int. Otherwise, it will not work
         actions = ((actions == 1) & (outcome == 1)).astype(int)
 
+        label_types = np.arange(self.n_actions)
+
         if actions.ndim == 2 and actions.shape[1] == 1:
-            self.policy.fit(data, actions.ravel())
+            self.policy.partial_fit(data, actions.ravel(), classes=label_types)
         else:
-            self.policy.fit(data, actions)
+            self.policy.partial_fit(data, actions, classes=label_types)
 
         self.observations = pd.DataFrame({c: [] for c in cols})
 
