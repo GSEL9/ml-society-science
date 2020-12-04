@@ -48,15 +48,17 @@ def main(args):
     actions = pd.read_csv('data/medical/historical_A.dat', header=None, sep=" ").values
     outcome = pd.read_csv('data/medical/historical_Y.dat', header=None, sep=" ").values
     observations = features[:, :128]
-    labels = features[:,128] + features[:,129]*2
+    labels = features[:, 128] + features[:,129] * 2
 
     #TODO: make this configurable
     policy_factory = policies[args.policy]
 
     descriptions = ["Two treatments", "Additional treatment"]
 
-    for i in range(2):
-        print(descriptions[i])
+    max_reward, opt_policy = 0, 0
+    for i, description in enumerate(descriptions):
+
+        print(description)
 
         # print("Setting up simulator")
         generator = data_generation.DataGenerator(matrices="./big_generating_matrices.mat", seed=args.seed)
@@ -71,6 +73,13 @@ def main(args):
         print("Total reward:", result)
         # print("Final analysis of results")
         policy.final_analysis()
+
+        if max_reward < result:
+            max_reward = result
+            opt_policy = description
+
+    print("Recommended policy:", opt_policy)
+
 
 if __name__ == "__main__":
     args = parse_arguments()

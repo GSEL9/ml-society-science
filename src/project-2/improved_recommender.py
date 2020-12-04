@@ -7,6 +7,7 @@ from recommender import Recommender
 # cols = ["sex", "smoker"] + [f"gen_{i}" for i in range(128)] + ["symptom_1", "symptom_2", "action", "outcome"]
 cols = ["sex", "smoker"] + [f"gen_{i}" for i in range(128)] + ["action", "outcome"]
 
+
 class ImprovedRecommender(Recommender):
     """
     The historical recommender approximate the policy pi_0
@@ -46,7 +47,6 @@ class ImprovedRecommender(Recommender):
     def observe(self, user, action, outcome):
         "We dont care about observing since this policy is not adaptive"
         self.observations.loc[len(self.observations)] = np.append(user, [action, outcome])
-
 
     def final_analysis(self):
         "Shows which genetic features to look into and a success rate for the treatments"
