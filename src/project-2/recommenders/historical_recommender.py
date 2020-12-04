@@ -1,13 +1,11 @@
-
 import pandas as pd
 import numpy as np
 from sklearn import linear_model
-from recommender import Recommender
 
-# cols = ["sex", "smoker"] + [f"gen_{i}" for i in range(128)] + ["symptom_1", "symptom_2", "action", "outcome"]
-cols = ["sex", "smoker"] + [f"gen_{i}" for i in range(128)] + ["action", "outcome"]
+from .recommender_base import Recommender
 
-class ImprovedRecommender(Recommender):
+
+class HistoricalRecommender(Recommender):
     """
     The historical recommender approximate the policy pi_0
     """
@@ -25,26 +23,22 @@ class ImprovedRecommender(Recommender):
         self._data = data
         self._actions = actions
         self._outcomes = outcome
+        
         self.policy = linear_model.LogisticRegression(random_state=random_state, max_iter=5000)
-
-        # important: make sure to cast to int. Otherwise, it will not work
-        actions = ((actions == 1) & (outcome == 1)).astype(int)
 
         if actions.ndim == 2 and actions.shape[1] == 1:
             self.policy.fit(data, actions.ravel())
         else:
             self.policy.fit(data, actions)
 
-        self.observations = pd.DataFrame({c: [] for c in cols})
-
-
     def recommend(self, user_data):
-        a, = A = self.policy.predict([user_data])
-        assert A.shape[0] == 1
-        return a
+        """"""
+        a = self.policy.predict([user_data])
+        assert a.shape[0] == 1
+        return a[0]
 
     def observe(self, user, action, outcome):
-        "We dont care about observing since this policy is not adaptive"
+        "We dont care about observing since this policy is not adaptive. However, we keep track of the data as we store it for future usage"
         self.observations.loc[len(self.observations)] = np.append(user, [action, outcome])
 
 
@@ -52,6 +46,7 @@ class ImprovedRecommender(Recommender):
         "Shows which genetic features to look into and a success rate for the treatments"
         weights = self.policy.coef_
         gene_weights = weights.ravel()[:128]
+
         argmin = gene_weights.argsort()[:3]
         argmax = gene_weights.argsort()[-3:][::-1]
 

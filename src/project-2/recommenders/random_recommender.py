@@ -23,7 +23,10 @@
 from sklearn import linear_model
 import numpy as np
 
-class RandomRecommender:
+from .recommender_base import Recommender
+
+
+class RandomRecommender(Recommender):
 
     #################################
     # Initialise

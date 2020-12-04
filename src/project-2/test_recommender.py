@@ -1,20 +1,12 @@
-import numpy as np
-import pandas as pd
-import random_recommender
-import group4_recommender
-import historical_recommender
-import improved_recommender
-import adaptive_recommender
-import data_generation
 import argparse
 
-policies = {
-    "random": random_recommender.RandomRecommender,
-    "group4": group4_recommender.Group4Recommender,
-    "historical": historical_recommender.HistoricalRecommender,
-    "improved": improved_recommender.ImprovedRecommender,
-    "adaptive": adaptive_recommender.AdaptiveRecommender
-}
+import numpy as np
+import pandas as pd
+
+from recommenders import policies
+
+import data_generation
+
 
 def parse_arguments():
     p = argparse.ArgumentParser()
@@ -23,8 +15,10 @@ def parse_arguments():
     p.add_argument("-s","--seed", type=int, default=None)
     return p.parse_args()
 
+
 def default_reward_function(action, outcome):
     return -0.1 * (action!= 0) + outcome
+
 
 def test_policy(generator, policy, reward_function, T):
     print("Testing for ", T, "steps")
@@ -48,15 +42,17 @@ def main(args):
     actions = pd.read_csv('data/medical/historical_A.dat', header=None, sep=" ").values
     outcome = pd.read_csv('data/medical/historical_Y.dat', header=None, sep=" ").values
     observations = features[:, :128]
-    labels = features[:,128] + features[:,129]*2
+    labels = features[:, 128] + features[:,129] * 2
 
     #TODO: make this configurable
     policy_factory = policies[args.policy]
 
     descriptions = ["Two treatments", "Additional treatment"]
 
-    for i in range(2):
-        print(descriptions[i])
+    max_reward, opt_policy = 0, 0
+    for i, description in enumerate(descriptions):
+
+        print(description)
 
         # print("Setting up simulator")
         generator = data_generation.DataGenerator(matrices="./big_generating_matrices.mat", seed=args.seed)
@@ -71,6 +67,13 @@ def main(args):
         print("Total reward:", result)
         print("*** Final analysis of recommender ***")
         policy.final_analysis()
+
+        if max_reward < result:
+            max_reward = result
+            opt_policy = description
+
+    print("Recommended policy:", opt_policy)
+
 
 if __name__ == "__main__":
     args = parse_arguments()
