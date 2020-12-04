@@ -1,5 +1,15 @@
 from abc import abstractmethod, ABC
+
 import sklearn
+import pandas as pd 
+
+
+def feature_counter():
+
+    features = ["sex", "smoker"] + [f"gen_{i}" for i in range(128)] + ["action", "outcome"]
+
+    return pd.DataFrame({c: [] for c in features})
+
 
 class Recommender(ABC):
     """
@@ -9,6 +19,8 @@ class Recommender(ABC):
         self.n_actions = n_actions
         self.n_outcomes = n_outcomes
         self.reward = self._default_reward
+
+        self.observations = feature_counter()
 
     def _default_reward(self, action, outcome):
         "By default, the reward is just equal to the outcome, as the actions play no role."

@@ -4,8 +4,6 @@ from sklearn import linear_model
 
 from .recommender_base import Recommender
 
-# cols = ["sex", "smoker"] + [f"gen_{i}" for i in range(128)] + ["symptom_1", "symptom_2", "action", "outcome"]
-cols = ["sex", "smoker"] + [f"gen_{i}" for i in range(128)] + ["action", "outcome"]
 
 class HistoricalRecommender(Recommender):
     """
@@ -31,9 +29,6 @@ class HistoricalRecommender(Recommender):
             self.policy.fit(data, actions.ravel())
         else:
             self.policy.fit(data, actions)
-
-        self.observations = pd.DataFrame({c: [] for c in cols})
-
 
     def recommend(self, user_data):
         a = self.policy.predict([user_data])

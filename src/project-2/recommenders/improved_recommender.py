@@ -6,9 +6,7 @@ from sklearn import linear_model
 from .recommender_base import Recommender
 from .policy.improved_policy import ImprovedPolicy
 
-
-# cols = ["sex", "smoker"] + [f"gen_{i}" for i in range(128)] + ["symptom_1", "symptom_2", "action", "outcome"]
-cols = ["sex", "smoker"] + [f"gen_{i}" for i in range(128)] + ["action", "outcome"]
+from .utils.stats import feature_counter
 
 
 class ImprovedRecommender(Recommender):
@@ -39,9 +37,6 @@ class ImprovedRecommender(Recommender):
             self.policy.fit(data, actions.ravel())
         else:
             self.policy.fit(data, actions)
-
-        self.observations = pd.DataFrame({c: [] for c in cols})
-
 
     def recommend(self, user_data):
         a, = A = self.policy.predict([user_data])

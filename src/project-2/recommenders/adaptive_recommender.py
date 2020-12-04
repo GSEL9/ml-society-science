@@ -5,9 +5,6 @@ from .improved_recommender import ImprovedRecommender
 from .policy.min_error_policy import MinErrorPolicy
 
 
-cols = ["sex", "smoker"] + [f"gen_{i}" for i in range(128)] + ["action", "outcome"]
-
-
 class AdaptiveRecommender(ImprovedRecommender):
     """
     An adaptive recommender for active treatment.
@@ -40,8 +37,6 @@ class AdaptiveRecommender(ImprovedRecommender):
             self.policy.fit(self._data[idx], self._outcomes[idx].ravel())
         else:
             self.policy.fit(self._data[idx], self._outcomes[idx])
-
-        self.observations = pd.DataFrame({c: [] for c in cols})
 
     def observe(self, user, action, outcome):
         """Adapt policy parameters to new data."""
