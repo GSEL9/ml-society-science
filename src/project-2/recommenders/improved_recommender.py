@@ -1,12 +1,17 @@
+
 import pandas as pd
 import numpy as np
 from sklearn import linear_model
-from recommender import Recommender
+
+from .recommender_base import Recommender
+from .policy.improved_policy import ImprovedPolicy
+
 
 # cols = ["sex", "smoker"] + [f"gen_{i}" for i in range(128)] + ["symptom_1", "symptom_2", "action", "outcome"]
 cols = ["sex", "smoker"] + [f"gen_{i}" for i in range(128)] + ["action", "outcome"]
 
-class HistoricalRecommender(Recommender):
+
+class ImprovedRecommender(Recommender):
     """
     The historical recommender approximate the policy pi_0
     """
@@ -24,7 +29,11 @@ class HistoricalRecommender(Recommender):
         self._data = data
         self._actions = actions
         self._outcomes = outcome
-        self.policy = linear_model.LogisticRegression(random_state=random_state, max_iter=5000)
+        #self.policy = linear_model.LogisticRegression(random_state=random_state, max_iter=5000)
+        self.policy = ImprovedPolicy(random_state=random_state, max_iter=5000)
+
+        # important: make sure to cast to int. Otherwise, it will not work
+        actions = ((actions == 1) & (outcome == 1)).astype(int)
 
         if actions.ndim == 2 and actions.shape[1] == 1:
             self.policy.fit(data, actions.ravel())
@@ -35,14 +44,13 @@ class HistoricalRecommender(Recommender):
 
 
     def recommend(self, user_data):
-        a = self.policy.predict([user_data])
-        assert a.shape[0] == 1
-        return a[0]
+        a, = A = self.policy.predict([user_data])
+        assert A.shape[0] == 1
+        return a
 
     def observe(self, user, action, outcome):
         "We dont care about observing since this policy is not adaptive"
         self.observations.loc[len(self.observations)] = np.append(user, [action, outcome])
-
 
     def final_analysis(self):
         "Shows which genetic features to look into and a success rate for the treatments"

@@ -1,20 +1,12 @@
-import numpy as np
-import pandas as pd
-import random_recommender
-import group4_recommender
-import historical_recommender
-import improved_recommender
-import adaptive_recommender
-import data_generation
 import argparse
 
-policies = {
-    "random": random_recommender.RandomRecommender,
-    "group4": group4_recommender.Group4Recommender,
-    "historical": historical_recommender.HistoricalRecommender,
-    "improved": improved_recommender.ImprovedRecommender,
-    "adaptive": adaptive_recommender.AdaptiveRecommender
-}
+import numpy as np
+import pandas as pd
+
+from recommenders import policies
+
+import data_generation
+
 
 def parse_arguments():
     p = argparse.ArgumentParser()
@@ -23,8 +15,10 @@ def parse_arguments():
     p.add_argument("-s","--seed", type=int, default=None)
     return p.parse_args()
 
+
 def default_reward_function(action, outcome):
     return -0.1 * (action!= 0) + outcome
+
 
 def test_policy(generator, policy, reward_function, T):
     print("Testing for ", T, "steps")

@@ -1,9 +1,9 @@
 import numpy as np
 import pandas as pd
-from sklearn import linear_model
 
-from policy import MinErrorPolicy
-from improved_recommender import ImprovedRecommender
+from .improved_recommender import ImprovedRecommender
+from .policy.min_error_policy import MinErrorPolicy
+
 
 cols = ["sex", "smoker"] + [f"gen_{i}" for i in range(128)] + ["action", "outcome"]
 
