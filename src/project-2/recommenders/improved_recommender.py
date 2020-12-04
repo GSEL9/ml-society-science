@@ -6,8 +6,6 @@ from sklearn import linear_model
 from .recommender_base import Recommender
 from .policy.improved_policy import ImprovedPolicy
 
-from .utils.stats import feature_counter
-
 
 class ImprovedRecommender(Recommender):
     """
