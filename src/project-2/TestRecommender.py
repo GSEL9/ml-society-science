@@ -26,10 +26,10 @@ labels = features[:,128] + features[:,129]*2
 
 import data_generation
 # import random_recommender
-# policy_factory = random_recommender.RandomRecommender
+policy_factory = random_recommender.RandomRecommender
 
-import group4_recommender
-policy_factory = group4_recommender.Group4Recommender
+# import group4_recommender
+# policy_factory = group4_recommender.Group4Recommender
 
 # import reference_recommender
 #policy_factory = reference_recommender.HistoricalRecommender

@@ -45,7 +45,10 @@ def main(args):
 
     policy_factory = policies[args.policy]
 
-    descriptions = ["Single treatment", "Additional treatment"]
+    descriptions = ["---- Testing with only two treatments ----",
+                    "--- Testing with an additional experimental treatment and 126 gene silencing treatments ---"]
+
+    generator_paths = ["./generating_matrices.mat", "./big_generating_matrices.mat"]
 
     max_reward, opt_policy = 0, 0
     for i, description in enumerate(descriptions):
@@ -53,7 +56,7 @@ def main(args):
         print(description)
 
         # print("Setting up simulator")
-        generator = data_generation.DataGenerator(matrices="./big_generating_matrices.mat", seed=args.seed)
+        generator = data_generation.DataGenerator(matrices=generator_paths[i], seed=args.seed)
         # print("Setting up policy")
         n_actions = generator.get_n_actions()
         n_outcomes = generator.get_n_outcomes()
