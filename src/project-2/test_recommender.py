@@ -1,11 +1,10 @@
 import argparse
-
 import numpy as np
 import pandas as pd
 
-from recommenders import policies
-
 import data_generation
+
+from recommenders import policies
 
 
 def parse_arguments():
@@ -17,7 +16,7 @@ def parse_arguments():
 
 
 def default_reward_function(action, outcome):
-    return -0.1 * (action!= 0) + outcome
+    return -0.1 * (action != 0) + outcome
 
 
 def test_policy(generator, policy, reward_function, T):
@@ -44,10 +43,9 @@ def main(args):
     observations = features[:, :128]
     labels = features[:, 128] + features[:,129] * 2
 
-    #TODO: make this configurable
     policy_factory = policies[args.policy]
 
-    descriptions = ["Two treatments", "Additional treatment"]
+    descriptions = ["Single treatment", "Additional treatment"]
 
     max_reward, opt_policy = 0, 0
     for i, description in enumerate(descriptions):
@@ -57,7 +55,10 @@ def main(args):
         # print("Setting up simulator")
         generator = data_generation.DataGenerator(matrices="./big_generating_matrices.mat", seed=args.seed)
         # print("Setting up policy")
-        policy = policy_factory(generator.get_n_actions(), generator.get_n_outcomes())
+        n_actions = generator.get_n_actions()
+        n_outcomes = generator.get_n_outcomes()
+        print("n actions:", n_actions, "n_outcomes", n_outcomes)
+        policy = policy_factory(n_actions, n_outcomes)
         ## Fit the policy on historical data first
         print("Fitting historical data to the policy")
         policy.fit_treatment_outcome(features, actions, outcome)
