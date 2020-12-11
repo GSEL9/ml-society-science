@@ -8,6 +8,8 @@ class AdaptiveRecommender(Recommender):
     """
     An adaptive recommender for active treatment. Based on context bandit
     """
+    n_actions_factor = 10
+    max_exploit_after_n = 2000
 
     def __init__(self, n_actions, n_outcomes, exploit_after_n=None):
 
@@ -15,7 +17,7 @@ class AdaptiveRecommender(Recommender):
 
         self.policy = AdaptivePolicy(n_actions, n_outcomes)
 
-        self.exploit_after_n = min(10 * n_actions, 50)
+        self.exploit_after_n = min(self.n_actions_factor * n_actions, self.max_exploit_after_n)
 
     def fit_treatment_outcome(self, data: np.ndarray,
                                     actions: np.ndarray,
@@ -53,10 +55,21 @@ class AdaptiveRecommender(Recommender):
 
 
     def final_analysis(self):
-        "Shows which genetic features to look into and a success rate for the treatments"
+        """
+        After all the data has been obtained, do a final analysis. This can consist of a number of things:
+        1. Recommending a specific fixed treatment policy
+        2. Suggesting looking at specific genes more closely
+        3. Showing whether or not the new treatment might be better than the old, and by how much.
+        4. Outputting an estimate of the advantage of gene-targeting treatments versus the best fixed treatment
+        """
         cured = self.observations["outcome"] == 1
         print("The adaptive policy had a ", cured.sum()/len(self.observations), "curing rate")
 
+        best_fixed_action = self.observations[self.exploit_after_n:][cured]["action"].mode().to_numpy()[0]
+        print("1: Recommending fixed policy: action =", best_fixed_action)
 
-        print("Recommending fixed policy: action ", self.observations[cured]["action"].mode().to_numpy()[0])
-        efficient_treatment = cured
+        print("2: Look into genes: ", genes)
+
+        print("3: Curing rate for old treatment:", curing_rate_1, "curing rate for new treatment: ", curing_rate_2)
+
+        print("4: ")
