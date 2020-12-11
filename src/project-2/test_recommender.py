@@ -1,3 +1,5 @@
+from time import time 
+
 import argparse
 import numpy as np
 import pandas as pd
@@ -33,7 +35,7 @@ def test_policy(generator, policy, reward_function, T):
         # print("x: ", x, "a: ", a, "y:", y, "r:", r)
     return u
 
-def benchmark(policy_factory, n_tests, seed, features, actions, outcome, quiet=False):
+def benchmark(policy_factory, n_tests, seed, features, actions, outcome, verbose=0):
     observations = features[:, :128]
     labels = features[:, 128] + features[:,129] * 2
 
@@ -47,30 +49,35 @@ def benchmark(policy_factory, n_tests, seed, features, actions, outcome, quiet=F
 
     max_reward, opt_policy = 0, 0
     for i, description in enumerate(descriptions):
-        if not quiet:
+
+        if verbose > 0:
             print(description)
+            t0 = time()
 
         # print("Setting up simulator")
         generator = data_generation.DataGenerator(matrices=generator_paths[i], seed=seed)
         # print("Setting up policy")
         n_actions = generator.get_n_actions()
         n_outcomes = generator.get_n_outcomes()
-        if not quiet:
+        if verbose > 0:
             print("n actions:", n_actions, "n_outcomes", n_outcomes)
         policy = policy_factory(n_actions, n_outcomes)
         ## Fit the policy on historical data first
-        if not quiet:
+        if verbose > 0:
             print("Fitting historical data to the policy")
         policy.fit_treatment_outcome(features, actions, outcome)
         ## Run an online test with a small number of actions
-        if not quiet:
+        if verbose > 0:
             print("Running an online test")
         result = test_policy(generator, policy, default_reward_function, n_tests)
         results.append(result)
-        if not quiet:
+        if verbose > 0:
             print("Total reward:", result)
             print("*** Final analysis of recommender ***")
         policy.final_analysis()
+
+        if verbose > 1:
+            print("Duration (s):", time() - t0)
 
     return results
 
