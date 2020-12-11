@@ -10,43 +10,47 @@ class MinErrorPolicy(Policy):
 	def __init__(self):
 		
 		self.priors = np.ones(2) * 0.5
-		self.L = None 
+		self.P = None
 
-	def fit(self, data, outcome):
+	def fit(self, data, actions):
 		"""Estimate prior probabilities and likelihoods."""
 
 		# Update priors.
-		self.priors[0] = np.sum(outcome == 0) / len(outcome)
-		self.priors[1] = np.sum(outcome) / len(outcome)
+		self.priors[0] = np.sum(actions == 0) / len(actions)
+		self.priors[1] = np.sum(actions) / len(actions)
 
-		if self.L is None:
-			self.L = np.ones((2, data.shape[1]))
+		if self.P is None:
+			self.P = np.ones((2, data.shape[1]))
 
 		# Update likelihood.
-		self.L[0] = np.sum(data[outcome == 0], axis=0) / np.sum(data[outcome == 0])
-		self.L[1] = np.sum(data[outcome == 1], axis=0) / np.sum(data[outcome == 1])
+		self.P[0] = np.sum(data[actions == 0], axis=0) / np.sum(data[actions == 0])
+		self.P[1] = np.sum(data[actions == 1], axis=0) / np.sum(data[actions == 1])
 
-	def observe(self, data, outcome):
+	def observe(self, data, actions):
 		"""Update prior probabilities and likelihoods."""
 
 		priors_prev = self.priors.copy()
-		L_prev = self.L.copy()
+		P_prev = self.P.copy()
+	
+		self.fit(data, actions)
 
-		self.fit(data, outcome)
-
-		self.priors = self.priors * priors_prev
-		self.L = self.L * L_prev
-
+		self.priors = self.priors + priors_prev
+		self.priors = self.priors / sum(self.priors)
+			
+		self.P = self.P + P_prev
+		self.P[0] = self.P[0] / np.sum(self.P[0])
+		self.P[1] = self.P[1] / np.sum(self.P[1])
+		
 	def _get_probas(self, x):
 		# Discriminant functions.
 
-		C0 = x * np.log(self.L[0] / self.L[1])
-		C1 = x * np.log(self.L[1] / self.L[0])	
+		P0 = x * np.log(self.P[0] / self.P[1]) + np.log(1 - self.P[0])
+		P1 = x * np.log(self.P[1] / self.P[0]) + np.log(1 - self.P[0])
 
-		g1 = np.sum(C0 + np.log(1 - self.L[0])) + np.log(self.priors[0] + 1e-12)
-		g2 = np.sum(C1 + np.log(1 - self.L[1])) + np.log(self.priors[1] + 1e-12)
+		g0 = np.sum(P0) + np.log(self.priors[0] + 1e-12)
+		g1 = np.sum(P1) + np.log(self.priors[1] + 1e-12)
 
-		p = g1 / (g1 + g2)
+		p = g0 / (g0 + g1)
 
 		return 1 - p, p
 

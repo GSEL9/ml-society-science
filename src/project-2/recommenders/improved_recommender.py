@@ -25,10 +25,10 @@ class ImprovedRecommender(Recommender):
         self._data = data
         self._actions = actions
         self._outcomes = outcome
-        #self.policy = linear_model.LogisticRegression(random_state=random_state, max_iter=5000)
+
         self.policy = MinErrorPolicy()
 
-        # important: make sure to cast to int. Otherwise, it will not work
+        # NB: Should be <int>.
         actions = ((actions == 1) & (outcome == 1)).astype(int)
 
         if actions.ndim == 2 and actions.shape[1] == 1:
