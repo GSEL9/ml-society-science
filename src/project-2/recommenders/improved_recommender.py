@@ -45,14 +45,7 @@ class ImprovedRecommender(Recommender):
 
     def final_analysis(self):
         "Shows which genetic features to look into and a success rate for the treatments"
-        # weights = self.policy.coef_
-        # gene_weights = weights.ravel()[:128]
-        # argmin = gene_weights.argsort()[:3]
-        # argmax = gene_weights.argsort()[-3:][::-1]
-        #
-        # print("Look more into ", [f"gen_{i-1}" for i in argmax], "as they increase likelihood of treatment")
-        # print("    as well as ", [f"gen_{i-1}" for i in argmin], "as they decrease likelihood of treatment")
-
+    
         treatments = self.observations["action"] == 1
         cured = self.observations["outcome"] == 1
         efficient_treatment = treatments & cured

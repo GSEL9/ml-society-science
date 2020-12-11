@@ -1,9 +1,7 @@
 import numpy as np
 import pandas as pd
-
+from contextualbandits.online import LinUCB
 from .recommender_base import Recommender
-from .policy.min_error_policy import MinErrorPolicy
-
 
 class AdaptiveRecommender(Recommender):
     """
@@ -52,9 +50,9 @@ class AdaptiveRecommender(Recommender):
 
     def final_analysis(self):
         "Shows which genetic features to look into and a success rate for the treatments"
-        print("The adaptive policy had a ", efficient_treatment.sum()/len(self.observations), "curing rate")
-
         cured = self.observations["outcome"] == 1
+        print("The adaptive policy had a ", cured.sum()/len(self.observations), "curing rate")
+
 
         print("Recommending fixed policy: action ", self.observations[cured]["action"].mode().to_numpy()[0])
         efficient_treatment = cured

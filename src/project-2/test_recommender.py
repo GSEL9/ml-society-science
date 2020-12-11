@@ -20,7 +20,7 @@ def default_reward_function(action, outcome):
 
 
 def test_policy(generator, policy, reward_function, T):
-    print("Testing for ", T, "steps")
+    # print("Testing for ", T, "steps")
     policy.set_reward(reward_function)
     u = 0
     for t in range(T):
@@ -33,51 +33,53 @@ def test_policy(generator, policy, reward_function, T):
         # print("x: ", x, "a: ", a, "y:", y, "r:", r)
     return u
 
-
-def main(args):
-    n_tests = args.n_tests
-
-    features = pd.read_csv('data/medical/historical_X.dat', header=None, sep=" ").values
-    actions = pd.read_csv('data/medical/historical_A.dat', header=None, sep=" ").values
-    outcome = pd.read_csv('data/medical/historical_Y.dat', header=None, sep=" ").values
+def benchmark(policy_factory, n_tests, seed, features, actions, outcome, quiet=False):
     observations = features[:, :128]
     labels = features[:, 128] + features[:,129] * 2
 
-    policy_factory = policies[args.policy]
 
     descriptions = ["---- Testing with only two treatments ----",
                     "--- Testing with an additional experimental treatment and 126 gene silencing treatments ---"]
 
     generator_paths = ["./generating_matrices.mat", "./big_generating_matrices.mat"]
 
+    results = []
+
     max_reward, opt_policy = 0, 0
     for i, description in enumerate(descriptions):
-
-        print(description)
+        if not quiet:
+            print(description)
 
         # print("Setting up simulator")
-        generator = data_generation.DataGenerator(matrices=generator_paths[i], seed=args.seed)
+        generator = data_generation.DataGenerator(matrices=generator_paths[i], seed=seed)
         # print("Setting up policy")
         n_actions = generator.get_n_actions()
         n_outcomes = generator.get_n_outcomes()
-        print("n actions:", n_actions, "n_outcomes", n_outcomes)
+        if not quiet:
+            print("n actions:", n_actions, "n_outcomes", n_outcomes)
         policy = policy_factory(n_actions, n_outcomes)
         ## Fit the policy on historical data first
-        print("Fitting historical data to the policy")
+        if not quiet:
+            print("Fitting historical data to the policy")
         policy.fit_treatment_outcome(features, actions, outcome)
         ## Run an online test with a small number of actions
-        print("Running an online test")
+        if not quiet:
+            print("Running an online test")
         result = test_policy(generator, policy, default_reward_function, n_tests)
-        print("Total reward:", result)
-        print("*** Final analysis of recommender ***")
+        results.append(result)
+        if not quiet:
+            print("Total reward:", result)
+            print("*** Final analysis of recommender ***")
         policy.final_analysis()
 
-        # if max_reward < result:
-        #     max_reward = result
-        #     opt_policy = description
+    return results
 
-    # print("Recommended policy:", opt_policy)
 
+def main(args):
+    features = pd.read_csv('data/medical/historical_X.dat', header=None, sep=" ").values
+    actions = pd.read_csv('data/medical/historical_A.dat', header=None, sep=" ").values
+    outcome = pd.read_csv('data/medical/historical_Y.dat', header=None, sep=" ").values
+    benchmark(policies[args.policy], args.n_tests, args.seed, features, actions, outcome)
 
 if __name__ == "__main__":
     args = parse_arguments()
