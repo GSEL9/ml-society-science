@@ -23,7 +23,7 @@ class HistoricalRecommender(Recommender):
         self._data = data
         self._actions = actions
         self._outcomes = outcome
-        
+
         self.policy = linear_model.LogisticRegression(random_state=random_state, max_iter=5000)
 
         if actions.ndim == 2 and actions.shape[1] == 1:
@@ -57,4 +57,4 @@ class HistoricalRecommender(Recommender):
         cured = self.observations["outcome"] == 1
         efficient_treatment = treatments & cured
 
-        print("The policy had a ", efficient_treatment.sum()/len(self.observations), "curing rate")
+        print("The policy had a ", cured.sum()/len(self.observations), "curing rate")

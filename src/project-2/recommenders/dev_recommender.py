@@ -1,16 +1,41 @@
-
 import pandas as pd
 import numpy as np
+
 from sklearn import linear_model
+from contextualbandits.online import LinUCB
 
 from .recommender_base import Recommender
-from .policy.min_error_policy import MinErrorPolicy
 
 
-class ImprovedRecommender(Recommender):
+class DevRecommender(Recommender):
     """
-    The historical recommender approximate the policy pi_0
+    Development recommender
+
+    sysout for running test_recommender dev 10000
+
+    ---- Testing with only two treatments ----
+    n actions: 2 n_outcomes 2
+    Fitting historical data to the policy
+    Running an online test
+    Testing for  10000 steps
+    Total reward: 4506.500000000234
+    *** Final analysis of recommender ***
+    hehe The policy had a  0.5403 curing rate
+    --- Testing with an additional experimental treatment and 126 gene silencing treatments ---
+    n actions: 129 n_outcomes 2
+    Fitting historical data to the policy
+    Running an online test
+    Testing for  10000 steps
+    Total reward: -747.0000000001357
+    *** Final analysis of recommender ***
+    hehe The policy had a  0.0253 curing rate
     """
+    def __init__(self, n_actions, n_outcomes, explot_after=None):
+        # n_actions = min(n_actions, 3)
+        super().__init__(n_actions, n_outcomes)
+
+        self.policy = LinUCB(n_actions, n_outcomes)
+
 
     def fit_treatment_outcome(self, data: np.ndarray,
                                     actions: np.ndarray,
@@ -25,38 +50,32 @@ class ImprovedRecommender(Recommender):
         self._data = data
         self._actions = actions
         self._outcomes = outcome
-        #self.policy = linear_model.LogisticRegression(random_state=random_state, max_iter=5000)
-        self.policy = MinErrorPolicy()
 
-        # important: make sure to cast to int. Otherwise, it will not work
-        actions = ((actions == 1) & (outcome == 1)).astype(int)
-
-        if actions.ndim == 2 and actions.shape[1] == 1:
-            self.policy.fit(data, actions.ravel())
-        else:
-            self.policy.fit(data, actions)
+        self.policy.fit(data, actions, outcome)
 
     def recommend(self, user_data):
-        a, = A = self.policy.predict([user_data])
-        assert A.shape[0] == 1
-        return a
+        a = self.policy.predict(user_data)
+        assert a.shape[0] == 1
+        return a[0]
 
     def observe(self, user, action, outcome):
-        "We dont care about observing since this policy is not adaptive"
+        self.policy.partial_fit(user, np.array([action]), np.array([outcome]))
         self.observations.loc[len(self.observations)] = np.append(user, [action, outcome])
+
 
     def final_analysis(self):
         "Shows which genetic features to look into and a success rate for the treatments"
         # weights = self.policy.coef_
         # gene_weights = weights.ravel()[:128]
+        #
         # argmin = gene_weights.argsort()[:3]
         # argmax = gene_weights.argsort()[-3:][::-1]
         #
         # print("Look more into ", [f"gen_{i-1}" for i in argmax], "as they increase likelihood of treatment")
         # print("    as well as ", [f"gen_{i-1}" for i in argmin], "as they decrease likelihood of treatment")
 
-        treatments = self.observations["action"] == 1
+        # treatments = self.observations["action"] == 1
         cured = self.observations["outcome"] == 1
-        efficient_treatment = treatments & cured
+        efficient_treatment = cured
 
-        print("The policy had a ", cured.sum()/len(self.observations), "curing rate")
+        print("hehe The policy had a ", efficient_treatment.sum()/len(self.observations), "curing rate")

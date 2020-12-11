@@ -72,11 +72,11 @@ def main(args):
         print("*** Final analysis of recommender ***")
         policy.final_analysis()
 
-        if max_reward < result:
-            max_reward = result
-            opt_policy = description
+        # if max_reward < result:
+        #     max_reward = result
+        #     opt_policy = description
 
-    print("Recommended policy:", opt_policy)
+    # print("Recommended policy:", opt_policy)
 
 
 if __name__ == "__main__":
