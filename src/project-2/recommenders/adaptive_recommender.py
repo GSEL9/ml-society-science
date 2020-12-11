@@ -57,6 +57,7 @@ class AdaptiveRecommender(Recommender):
         cured = self.observations["outcome"] == 1
         print("The adaptive policy had a ", cured.sum()/len(self.observations), "curing rate")
 
+        mean_abs_thetas = self.policy.mean_magnitude_thetas()
 
         print("Recommending fixed policy: action ", self.observations[cured]["action"].mode().to_numpy()[0])
         efficient_treatment = cured
