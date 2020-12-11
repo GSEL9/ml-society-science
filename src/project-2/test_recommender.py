@@ -3,7 +3,7 @@ from time import time
 import argparse
 import numpy as np
 import pandas as pd
-
+from tqdm import tqdm
 import data_generation
 
 from recommenders import policies
@@ -21,11 +21,16 @@ def default_reward_function(action, outcome):
     return -0.1 * (action != 0) + outcome
 
 
-def test_policy(generator, policy, reward_function, T):
-    # print("Testing for ", T, "steps")
+def test_policy(generator, policy, reward_function, T, quiet=False):
+    it = range(T)
+    if not quiet:
+        print("Testing for ", T, "steps")
+        it = tqdm(it)
+
     policy.set_reward(reward_function)
     u = 0
-    for t in range(T):
+
+    for t in it:
         x = generator.generate_features()
         a = policy.recommend(x)
         y = generator.generate_outcome(x, a)
@@ -74,7 +79,8 @@ def benchmark(policy_factory, n_tests, seed, features, actions, outcome, verbose
         if verbose > 0:
             print("Total reward:", result)
             print("*** Final analysis of recommender ***")
-        policy.final_analysis()
+        if not quiet:
+            policy.final_analysis()
 
         if verbose > 1:
             print("Duration (s):", time() - t0)

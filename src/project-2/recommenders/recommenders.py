@@ -5,7 +5,7 @@ from .historical_recommender import HistoricalRecommender
 
 policies = {
     "random": RandomRecommender,
+    "historical": HistoricalRecommender,
     "improved": ImprovedRecommender,
     "adaptive": AdaptiveRecommender,
-    "historical": HistoricalRecommender,
 }
