@@ -69,6 +69,7 @@ class AdaptiveRecommender(Recommender):
         print("1: Recommending fixed policy: action =", best_fixed_action)
 
         print("2: Look into genes: ", genes)
+        mean_abs_thetas = self.policy.mean_magnitude_thetas()
 
         print("3: Curing rate for old treatment:", curing_rate_1, "curing rate for new treatment: ", curing_rate_2)
 
