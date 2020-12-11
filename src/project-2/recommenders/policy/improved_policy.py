@@ -1,63 +1,63 @@
 import numpy as np 
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import GridSearchCV
 
 from .policy import Policy
 
 
 class ImprovedPolicy(Policy):
 
-	def __init__(self, random_state=42, max_iter=100):
+	def __init__(self):
+		
+		self.priors = np.ones(2) * 0.5
+		self.P = None
 
-		self.random_state = random_state
-		self.max_iter = max_iter
+	def fit(self, data, actions):
+		"""Estimate prior probabilities and likelihoods."""
 
-		self.classifier = None 
+		# Update priors.
+		self.priors[0] = np.sum(actions == 0) / len(actions)
+		self.priors[1] = np.sum(actions) / len(actions)
 
-	@property 
-	def coef_(self):
-		return self.classifier.coef_
+		if self.P is None:
+			self.P = np.ones((2, data.shape[1]))
 
-	def fit(self, data: np.ndarray, actions: np.ndarray, verbose=0, optimize=False, 	
-			**kwargs):
-		"""Train a model to estimate the probability of an outcome from data.
+		# Update likelihood.
+		self.P[0] = np.sum(data[actions == 0], axis=0) / np.sum(data[actions == 0])
+		self.P[1] = np.sum(data[actions == 1], axis=0) / np.sum(data[actions == 1])
 
-		Args:
-			data: Data matrix.
-			actions: Actions for each data sample.
-		"""
+	def observe(self, data, actions):
+		"""Update prior probabilities and likelihoods."""
 
-		if optimize:
+		priors_prev = self.priors.copy()
+		P_prev = self.P.copy()
+	
+		self.fit(data, actions)
 
-			if verbose > 0:
-				print("Hyperparameter search...")
+		self.priors = self.priors + priors_prev
+		self.priors = self.priors / sum(self.priors)
+			
+		self.P = self.P + P_prev
+		self.P[0] = self.P[0] / np.sum(self.P[0])
+		self.P[1] = self.P[1] / np.sum(self.P[1])
+		
+	def _get_probas(self, x):
+		# Discriminant functions.
 
-			param_grid = [{'C': 10 ** np.linspace(-4, 2, 10)},
-						  {'penalty': ['l1', 'l2']}]
+		P0 = x * np.log(self.P[0] / self.P[1]) + np.log(1 - self.P[0])
+		P1 = x * np.log(self.P[1] / self.P[0]) + np.log(1 - self.P[0])
 
-			grid_search = GridSearchCV(
-				estimator=LogisticRegression(random_state=self.random_state,
-											 max_iter=self.max_iter,
-											 solver="liblinear"), 
-				param_grid=param_grid, cv=5
-			)
-			grid_search.fit(data, actions)
-			self.classifier = grid_search.best_estimator_
+		g0 = np.sum(P0) + np.log(self.priors[0] + 1e-12)
+		g1 = np.sum(P1) + np.log(self.priors[1] + 1e-12)
 
-		else:
-			self.classifier = LogisticRegression(random_state=self.random_state, 
-												 solver="liblinear",
-												 **kwargs)
-			self.classifier.fit(data, actions)
+		p = g0 / (g0 + g1)
 
-		return self
+		return 1 - p, p
 
-	def get_probas(self, data: np.ndarray, **kwargs):
+	def get_probas(self, data):
+		"""Estimates probailities for each action."""
+
+		return np.array([self._get_probas(x) for x in data], dtype=float)
+
+	def predict(self, data: np.ndarray, **kwargs):
 		"""Select an action."""
 
-		return self.classifier.predict_proba(data)
-
-	def predict(self, data: np.ndarray, actions: np.ndarray = None, outcome: np.ndarray = None):
-		"""Select an action."""
-
-		return self.classifier.predict(data)
+		return np.argmax(self.get_probas(data), axis=1)
