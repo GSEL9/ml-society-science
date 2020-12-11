@@ -6,9 +6,7 @@ from .dev_recommender import DevRecommender
 
 policies = {
     "random": RandomRecommender,
+    "historical": HistoricalRecommender,
     "improved": ImprovedRecommender,
     "adaptive": AdaptiveRecommender,
-    "historical": HistoricalRecommender,
-    "dev": DevRecommender,
-    # "fixed": FixedRecommender
 }
