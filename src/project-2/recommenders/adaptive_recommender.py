@@ -10,52 +10,51 @@ class AdaptiveRecommender(Recommender):
     An adaptive recommender for active treatment. Based on context bandit
     """
 
-    def __init__(self, n_actions, n_outcomes, seed=None):
-        "Initialize alpha and beta as model parameters"
+    def __init__(self, n_actions, n_outcomes, exploit_after_n=None):
+        exploit_after_n = 10*n_actions
+        # n_actions = min(n_actions, 3)
         super().__init__(n_actions, n_outcomes)
 
-        self.rng = np.random.RandomState(seed or 0)
+        self.policy = LinUCB(n_actions, n_outcomes)
 
-
-
+        self.exploit_after_n = exploit_after_n
 
     def fit_treatment_outcome(self, data: np.ndarray,
                                     actions: np.ndarray,
                                     outcome: np.ndarray,
                                     random_state:int=0):
-        pass
-
-    def observe(self, user, action, outcome):
         """
-        x: Context vector
-        a: action
-        y: outcome
+        Fit a model from patient data, actions and their effects
+        Here we assume that the outcome is a direct function of data and actions
+        This model can then be used in estimate_utility(), predict_proba() and recommend()
         """
-        x, a, y = user, action, outcome
 
-        self.alphas[a][x] += y
-        self.betas[a][x] += (1 - y)
+        self._data = data
+        self._actions = actions
+        self._outcomes = outcome
+
+        self.policy.fit(data, actions, outcome)
 
     def recommend(self, user_data):
-        """
-        x: Context vector
-        actions_t: local action space
-        """
-        if not hasattr(self, "alphas"):
-            self.init_parameters(len(user_data))
+        if len(self.observations) == self.exploit_after_n:
+            print("STARTING TO EXPLOIT")
+        if len(self.observations) > self.exploit_after_n:
+            a = self.policy.predict(np.array([user_data]), exploit=True)
+        else:
+            a = self.policy.predict(np.array([user_data]))
+        assert a.shape[0] == 1
+        return a[0]
 
-        p_t_a = self.rng.beta(self.alphas, self.betas)
-        print(p_t_a)
-        print(p_t_a.shape)
-        a_t = np.argmax(p_t_a)
-        print(a_t)
-        return a_t
-
-    def init_parameters(self, n_features):
-
-        self.alphas = self.rng.uniform(size=(self.n_actions, n_features))
-        self.betas = self.rng.uniform(size=(self.n_actions, n_features))
+    def observe(self, user, action, outcome):
+        self.policy.partial_fit(user, np.array([action]), np.array([outcome]))
+        self.observations.loc[len(self.observations)] = np.append(user, [action, outcome])
 
 
     def final_analysis(self):
-        """Shows which genetic features to look into and a success rate for the treatments"""
+        "Shows which genetic features to look into and a success rate for the treatments"
+        print("The adaptive policy had a ", efficient_treatment.sum()/len(self.observations), "curing rate")
+
+        cured = self.observations["outcome"] == 1
+
+        print("Recommending fixed policy: action ", self.observations[cured]["action"].mode().to_numpy()[0])
+        efficient_treatment = cured

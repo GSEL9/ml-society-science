@@ -10,5 +10,5 @@ policies = {
     "adaptive": AdaptiveRecommender,
     "historical": HistoricalRecommender,
     "dev": DevRecommender,
-    "fixed": FixedRecommender
+    # "fixed": FixedRecommender
 }
