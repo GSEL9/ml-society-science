@@ -10,6 +10,8 @@ class AdaptiveRecommender(Recommender):
     """
     n_actions_factor = 10
     max_exploit_after_n = 2000
+    # max_exploit_after_n = 20
+
 
     def __init__(self, n_actions, n_outcomes, exploit_after_n=None):
 
@@ -68,9 +70,15 @@ class AdaptiveRecommender(Recommender):
         best_fixed_action = self.observations[self.exploit_after_n:][cured]["action"].mode().to_numpy()[0]
         print("1: Recommending fixed policy: action =", best_fixed_action)
 
-        print("2: Look into genes: ", genes)
+        # compute gene imapct
         mean_abs_thetas = self.policy.mean_magnitude_thetas()
+        print(mean_abs_thetas.shape)
+        gene_weights = mean_abs_thetas[2:128]
+        argmax = gene_weights.argsort()[-3:][::-1]
 
-        print("3: Curing rate for old treatment:", curing_rate_1, "curing rate for new treatment: ", curing_rate_2)
 
-        print("4: ")
+        print("2: Look into genes: ", [f"gen_{i-1}" for i in argmax])
+
+        # print("3: Curing rate for old treatment:", curing_rate_1, "curing rate for new treatment: ", curing_rate_2)
+        #
+        # print("4: ")
