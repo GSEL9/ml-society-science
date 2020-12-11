@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
-from contextualbandits.online import LinUCB
 from .recommender_base import Recommender
+from .policy.adaptive_policy import AdaptivePolicy
+
 
 class AdaptiveRecommender(Recommender):
     """
@@ -9,13 +10,12 @@ class AdaptiveRecommender(Recommender):
     """
 
     def __init__(self, n_actions, n_outcomes, exploit_after_n=None):
-        exploit_after_n = 10*n_actions
-        # n_actions = min(n_actions, 3)
+
         super().__init__(n_actions, n_outcomes)
 
-        self.policy = LinUCB(n_actions, n_outcomes)
+        self.policy = AdaptivePolicy(n_actions, n_outcomes)
 
-        self.exploit_after_n = exploit_after_n
+        self.exploit_after_n = min(10 * n_actions, 50)
 
     def fit_treatment_outcome(self, data: np.ndarray,
                                     actions: np.ndarray,
@@ -31,20 +31,24 @@ class AdaptiveRecommender(Recommender):
         self._actions = actions
         self._outcomes = outcome
 
-        self.policy.fit(data, actions, outcome)
+        # NB: Should be <int>.
+        actions = ((actions == 1) & (outcome == 1)).astype(int)
+
+        if actions.ndim == 2 and actions.shape[1] == 1:
+            self.policy.fit(data, actions.ravel(), outcome.ravel())
+        else:
+            self.policy.fit(data, actions, outcome)
 
     def recommend(self, user_data):
         if len(self.observations) == self.exploit_after_n:
             print("STARTING TO EXPLOIT")
         if len(self.observations) > self.exploit_after_n:
-            a = self.policy.predict(np.array([user_data]), exploit=True)
-        else:
-            a = self.policy.predict(np.array([user_data]))
-        assert a.shape[0] == 1
-        return a[0]
+            return self.policy.predict(user_data, exploit=True)
+
+        return self.policy.predict(user_data)
 
     def observe(self, user, action, outcome):
-        self.policy.partial_fit(user, np.array([action]), np.array([outcome]))
+        self.policy.partial_fit(user, action, outcome)
         self.observations.loc[len(self.observations)] = np.append(user, [action, outcome])
 
 

@@ -2,7 +2,7 @@
 import numpy as np
 
 from .recommender_base import Recommender
-from .policy.min_error_policy import MinErrorPolicy
+from .policy.improved_policy import ImprovedPolicy
 
 
 class ImprovedRecommender(Recommender):
@@ -24,7 +24,7 @@ class ImprovedRecommender(Recommender):
         self._actions = actions
         self._outcomes = outcome
 
-        self.policy = MinErrorPolicy()
+        self.policy = ImprovedPolicy()
 
         # NB: Should be <int>.
         actions = ((actions == 1) & (outcome == 1)).astype(int)
