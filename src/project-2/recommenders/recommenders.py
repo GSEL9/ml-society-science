@@ -9,5 +9,6 @@ policies = {
     "improved": ImprovedRecommender,
     "adaptive": AdaptiveRecommender,
     "historical": HistoricalRecommender,
-    "dev": DevRecommender
+    "dev": DevRecommender,
+    "fixed": FixedRecommender
 }
