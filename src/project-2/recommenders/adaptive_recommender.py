@@ -2,24 +2,23 @@ import numpy as np
 import pandas as pd
 from .recommender_base import Recommender
 from .policy.adaptive_policy import AdaptivePolicy
-
+from contextualbandits.online import LinUCB
+# import matplotlib as plt
+from collections import Counter
 
 class AdaptiveRecommender(Recommender):
     """
     An adaptive recommender for active treatment. Based on context bandit
     """
-    n_actions_factor = 10
-    max_exploit_after_n = 2000
-    # max_exploit_after_n = 20
 
-
-    def __init__(self, n_actions, n_outcomes, exploit_after_n=None):
+    def __init__(self, n_actions, n_outcomes, exploit_after_n=None, n_actions_factor=10, max_exploit_after_n=2000):
 
         super().__init__(n_actions, n_outcomes)
 
-        self.policy = AdaptivePolicy(n_actions, n_outcomes)
+        # self.policy = AdaptivePolicy(n_actions, n_outcomes)
+        self.policy = LinUCB(n_actions)
 
-        self.exploit_after_n = min(self.n_actions_factor * n_actions, self.max_exploit_after_n)
+        self.exploit_after_n = min(n_actions_factor * n_actions, max_exploit_after_n)
 
     def fit_treatment_outcome(self, data: np.ndarray,
                                     actions: np.ndarray,
@@ -44,15 +43,20 @@ class AdaptiveRecommender(Recommender):
             self.policy.fit(data, actions, outcome)
 
     def recommend(self, user_data):
+        x = np.array([user_data])
         if len(self.observations) == self.exploit_after_n:
             print("STARTING TO EXPLOIT")
-        if len(self.observations) > self.exploit_after_n:
-            return self.policy.predict(user_data, exploit=True)
 
-        return self.policy.predict(user_data)
+        if len(self.observations) > self.exploit_after_n:
+            a, = self.policy.predict(x, exploit=True)
+        else:
+            a, = self.policy.predict(x)
+
+        return a
 
     def observe(self, user, action, outcome):
-        self.policy.partial_fit(user, action, outcome)
+        x, a, y = (np.array([i]) for i in (user, action, outcome))
+        self.policy.partial_fit(x, a, y)
         self.observations.loc[len(self.observations)] = np.append(user, [action, outcome])
 
 
@@ -67,17 +71,21 @@ class AdaptiveRecommender(Recommender):
         cured = self.observations["outcome"] == 1
         print("The adaptive policy had a ", cured.sum()/len(self.observations), "curing rate")
 
-        best_fixed_action = self.observations[self.exploit_after_n:][cured]["action"].mode().to_numpy()[0]
-        print("1: Recommending fixed policy: action =", best_fixed_action)
+        # observation_counts = Counter(self.observations[cured].iloc[self.exploit_after_n:]["action"])
+        observation_counts = Counter(self.observations[cured]["action"])
+
+        ocdf = pd.DataFrame(observation_counts, ["counts"])
+        ocdf.plot.bar()
+        # best_fixed_action = observation_counts.mode().to_numpy()[0]
+        # print("1: Recommending fixed policy: action =", best_fixed_action)
 
         # compute gene imapct
-        mean_abs_thetas = self.policy.mean_magnitude_thetas()
-        print(mean_abs_thetas.shape)
-        gene_weights = mean_abs_thetas[2:128]
-        argmax = gene_weights.argsort()[-3:][::-1]
-
-
-        print("2: Look into genes: ", [f"gen_{i-1}" for i in argmax])
+        # mean_abs_thetas = self.policy.mean_magnitude_thetas()
+        # print(mean_abs_thetas.shape)
+        # gene_weights = mean_abs_thetas[2:128]
+        # argmax = gene_weights.argsort()[-3:][::-1]
+        #
+        # print("2: Look into genes: ", [f"gen_{i-1}" for i in argmax])
 
         # print("3: Curing rate for old treatment:", curing_rate_1, "curing rate for new treatment: ", curing_rate_2)
         #

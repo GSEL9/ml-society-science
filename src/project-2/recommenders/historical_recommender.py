@@ -32,7 +32,7 @@ class HistoricalRecommender(Recommender):
             self.policy.fit(data, actions)
 
     def recommend(self, user_data):
-        """"""
+        """Recommends an action based on approximated historical policy"""
         a = self.policy.predict([user_data])
         assert a.shape[0] == 1
         return a[0]
