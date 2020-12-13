@@ -7,25 +7,27 @@ import numpy as np
 class DataGenerator:
     def __init__(self, matrices="./big_generating_matrices.mat", seed=None):
         if seed is not None:
-            np.random.seed(seed)
+            self.rng = np.random.default_rng(seed)
+        else:
+            self.rng = np.random
         parameters = sio.loadmat(matrices)
         self.V = parameters['V'] # the treatment effect matrix
         self.W = parameters['W'] # the feature matrix
 
     def generate_features(self):
-        T = np.random.normal(size=(1, self.W.shape[0]))
+        T = self.rng.normal(size=(1, self.W.shape[0]))
         X = np.zeros(130)
         X[0:128] = 1*(np.matmul(T, self.W) < 0)
-        X[0] = 1*(np.random.uniform() <0.5)
-        X[1] = 1*(np.random.uniform() < 0.2 + 0.05 * X[2] + 0.1 * X[0])
-        Z = (np.random.uniform() - 0.2 * X[3] + 0.2 * X[4] - 0.2 * X[5])
-        X[127] = 1*(np.random.uniform()*0.5 + 0.5*Z<0.5)
+        X[0] = 1*(self.rng.uniform() <0.5)
+        X[1] = 1*(self.rng.uniform() < 0.2 + 0.05 * X[2] + 0.1 * X[0])
+        Z = (self.rng.uniform() - 0.2 * X[3] + 0.2 * X[4] - 0.2 * X[5])
+        X[127] = 1*(self.rng.uniform()*0.5 + 0.5*Z<0.5)
         if (Z > 0):
-            X[128]= 1*(np.random.uniform() < 0.5 * X[3] - 0.1 * X[4] + 0.6 * X[5])
-            X[129] = 1*(np.random.uniform() < X[1]*X[3] + X[2])
+            X[128]= 1*(self.rng.uniform() < 0.5 * X[3] - 0.1 * X[4] + 0.6 * X[5])
+            X[129] = 1*(self.rng.uniform() < X[1]*X[3] + X[2])
         else:
-            X[128] = 1*(np.random.uniform() < 0.4 * X[3] + 0.5 * X[5])
-            X[129] = 1*(np.random.uniform() < 0.2 * X[1]*X[3] + 0.2 * X[4] - 0.1 * X[9])
+            X[128] = 1*(self.rng.uniform() < 0.4 * X[3] + 0.5 * X[5])
+            X[129] = 1*(self.rng.uniform() < 0.2 * X[1]*X[3] + 0.2 * X[4] - 0.1 * X[9])
         return X
 
     def get_n_actions(self):
@@ -35,7 +37,7 @@ class DataGenerator:
         return 2
 
     def generate_default_action(self, X):
-        A = 1*(np.random.uniform() < X[128] * 0.4  + X[129] * 0.5);
+        A = 1*(self.rng.uniform() < X[128] * 0.4  + X[129] * 0.5);
         return A
 
     def generate_outcome(self, X, A):
