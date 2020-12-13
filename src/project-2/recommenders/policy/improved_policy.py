@@ -23,21 +23,6 @@ class ImprovedPolicy(Policy):
 		# Update likelihood.
 		self.P[0] = np.sum(data[actions == 0], axis=0) / np.sum(data[actions == 0])
 		self.P[1] = np.sum(data[actions == 1], axis=0) / np.sum(data[actions == 1])
-
-	def observe(self, data, actions):
-		"""Update prior probabilities and likelihoods."""
-
-		priors_prev = self.priors.copy()
-		P_prev = self.P.copy()
-	
-		self.fit(data, actions)
-
-		self.priors = self.priors + priors_prev
-		self.priors = self.priors / sum(self.priors)
-			
-		self.P = self.P + P_prev
-		self.P[0] = self.P[0] / np.sum(self.P[0])
-		self.P[1] = self.P[1] / np.sum(self.P[1])
 		
 	def _get_probas(self, x):
 		# Discriminant functions.
