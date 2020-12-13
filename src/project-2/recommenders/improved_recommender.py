@@ -34,20 +34,18 @@ class ImprovedRecommender(Recommender):
         else:
             self.policy.fit(data, actions)
 
-    def recommend(self, user_data):
+    def recommend(self, user_data: np.ndarray) -> int:
         a, = A = self.policy.predict([user_data])
         assert A.shape[0] == 1
         return a
 
-    def observe(self, user, action, outcome):
+    def observe(self, user: np.ndarray, action: int, outcome: int) -> None:
         "We dont care about observing since this policy is not adaptive"
         self.observations.loc[len(self.observations)] = np.append(user, [action, outcome])
 
-    def final_analysis(self):
+    def final_analysis(self) -> None:
         "Shows which genetic features to look into and a success rate for the treatments"
-    
-        treatments = self.observations["action"] == 1
+
         cured = self.observations["outcome"] == 1
-        efficient_treatment = treatments & cured
 
         print("The policy had a ", cured.sum()/len(self.observations), "curing rate")

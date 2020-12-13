@@ -72,19 +72,23 @@ class AdaptiveRecommender(Recommender):
         else:
             self.policy.fit(data, actions, outcome)
 
-    def recommend(self, user_data) -> int:
+    def recommend(self, user_data: np.ndarray) -> int:
         x = np.array([user_data[self.indices]])
+
         if len(self.observations) == self.exploit_after_n:
             print("STARTING TO EXPLOIT")
 
         if len(self.observations) > self.exploit_after_n:
             a, = self.policy.predict(x, exploit=True)
         else:
-            a, = self.policy.predict(x)
+            # a, = self.policy.predict(x)
+            A = self.policy.topN(x, self.n_actions)
+            a = A[(A < 3) | ((A >= 3) & (user_data[A-1] == 1))][-1]
 
         return a
 
-    def observe(self, user, action, outcome) -> None:
+
+    def observe(self, user: np.ndarray, action: int, outcome: int) -> None:
         x, a, y = (np.array([i]) for i in (user[self.indices], action, outcome))
         self.policy.partial_fit(x, a, y)
         self.observations.loc[len(self.observations)] = np.append(user, [action, outcome])
@@ -101,11 +105,13 @@ class AdaptiveRecommender(Recommender):
         cured = self.observations["outcome"] == 1
         print("The adaptive policy had a ", cured.sum()/len(self.observations), "curing rate")
 
+
         cured_explor = cured.iloc[:self.exploit_after_n]
         explor_obs = self.observations.iloc[:self.exploit_after_n]
         explor_total = Counter(explor_obs["action"])
         explor_cured = Counter(explor_obs[cured_explor]["action"])
         explor_curing_rates = {k:explor_cured[k]/explor_total[k] for k in explor_cured}
+        print(explor_curing_rates)
         explor_df = pd.DataFrame(explor_curing_rates, ["actions taken"])
         explor_df.plot.bar(rot=0, title="Curing treatments given in exploration phase")
 
@@ -122,10 +128,20 @@ class AdaptiveRecommender(Recommender):
         else:
             print(explor_total)
 
+        best_action, best_curing_rate = max(exploit_curing_rates.items(), key=lambda t: t[1])
+        print("1: recommending a fixed treatment policy for action", max(exploit_curing_rates, key=lambda k: exploit_curing_rates[k]))
 
-        if self.n_features is not None:
-            print("look more into genes:", self.indices[(self.indices > 1) & (self.indices < 126)][:3] + 1)
+        if self.n_features is not None and self.n_actions > 2:
+            print("2: look more into genes:", *(f"gen_{i-2}" for i, _ in explor_cured.most_common(6) if i > 2))
 
         if self.n_actions > 2:
             print("3: Curing rate for old treatment:", exploit_curing_rates.get(1, "NOT CHOSEN"), "curing rate for new treatment: ", exploit_curing_rates.get(2, "NOT CHOSEN"))
-            print("4. Outputting an estimate of the advantage of gene-targeting treatments versus the best fixed treatment")
+
+            print("4: Outputting an estimate of the advantage of gene-targeting treatments versus the best fixed treatment")
+
+            best_gene, gene_curing_rate = max(explor_curing_rates.items(), key=lambda t: t[1] * t[1] > 2)
+
+            p = best_curing_rate / gene_curing_rate
+            print("We estimate that fixed treatment is ", abs(p-1), "times", "better" if p > 0 else "worse", " than the best gene targeting treatment with a curing rate of", )
+            print("Best curing rate: ", best_curing_rate)
+            print("Best gene curing rate: ", gene_curing_rate)

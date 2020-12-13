@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
-from sklearn import linear_model
-
+from sklearn import naive_bayes
 from .recommender_base import Recommender
 
 
@@ -24,14 +23,14 @@ class HistoricalRecommender(Recommender):
         self._actions = actions
         self._outcomes = outcome
 
-        self.policy = linear_model.LogisticRegression(random_state=random_state, max_iter=5000)
+        self.policy = naive_bayes.BernoulliNB()
 
         if actions.ndim == 2 and actions.shape[1] == 1:
             self.policy.fit(data, actions.ravel())
         else:
             self.policy.fit(data, actions)
 
-    def recommend(self, user_data):
+    def recommend(self, user_data: np.ndarray) -> int:
         """Recommends an action based on approximated historical policy"""
         a = self.policy.predict([user_data])
         assert a.shape[0] == 1
@@ -44,17 +43,22 @@ class HistoricalRecommender(Recommender):
 
     def final_analysis(self):
         "Shows which genetic features to look into and a success rate for the treatments"
-        weights = self.policy.coef_
-        gene_weights = weights.ravel()[:128]
+        probs = self.policy.feature_log_prob_[1][2:128]
+        argmin = probs.argsort()[:3]
+        argmax = probs.argsort()[-3:][::-1]
 
-        argmin = gene_weights.argsort()[:3]
-        argmax = gene_weights.argsort()[-3:][::-1]
 
+        cured = self.observations["outcome"] == 1
+
+        # choose the action that cures the most
+        best_action = self.observations["action"][cured].mode()[0]
+        
+        print("The policy had a ", cured.sum()/len(self.observations), "curing rate")
+
+        print("1: Recommending a fixed policy of action", best_action)
+
+        print("2: most significant genes")
         print("Look more into ", [f"gen_{i-1}" for i in argmax], "as they increase likelihood of treatment")
         print("    as well as ", [f"gen_{i-1}" for i in argmin], "as they decrease likelihood of treatment")
 
-        treatments = self.observations["action"] == 1
-        cured = self.observations["outcome"] == 1
-        efficient_treatment = treatments & cured
-
-        print("The policy had a ", cured.sum()/len(self.observations), "curing rate")
+        print("3 and 4 are irrelevant for the historical recommender")
